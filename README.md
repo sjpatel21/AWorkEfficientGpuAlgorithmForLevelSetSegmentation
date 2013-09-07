@@ -11,7 +11,7 @@
 
 ### Introduction
 
-This repository contains a C++/CUDA system that implements the paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
+This repository contains a C++/CUDA implementation of our paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
 
 ### Requirements 
 
