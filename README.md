@@ -1,14 +1,17 @@
-<a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/TitlePageWeb.png)</a>
+<a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/Brainweb-3D-Composite-1-6.png)</a>
 
-<a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>A Work-Efficient GPU Algorithm for Level Set Segmentation</a>  
-Mike Roberts, Jeff Packer, Mario Costa Sousa, Joseph Ross Mitchell  
-High Performance Graphics 2010
+<p align="center">
+  <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>A Work-Efficient GPU Algorithm for Level Set Segmentation</a><br>
+  Mike Roberts, Jeff Packer, Mario Costa Sousa, Joseph Ross Mitchell<br>
+  High Performance Graphics 2010
+</p>
+<p align="center">
+  <b>The source code and precompiled binaries available here are provided for non-commercial research purposes only.</b>
+</p>
 
-C++/CUDA system implementing the paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
+### Introduction
 
-### Disclaimer
-
-The source code and precompiled binaries available here are provided for non-commercial research purposes only.
+This repository contains a C++/CUDA system that implements the paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
 
 ### Requirements 
 
