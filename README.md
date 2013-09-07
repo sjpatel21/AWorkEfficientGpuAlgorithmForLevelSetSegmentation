@@ -46,3 +46,5 @@ In the sdk\msdev folder, I have included an install_highlighting_vs8.reg file to
 * The binaries and code are both packaged with pre-configured project files, which are combinations of image data and meaningful parameter values. These project files are intended as an easy method of getting started with the application, and also as a way of easily reproducing the results in the paper.
 * The video on the <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>project page</a> offers rough guidance on the intended usage of the application.
 * This codebase started as an undergraduate video game project and slowly evolved into its current form, so you will certainly find some irrelevant old systems as you dig through it.
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/bec89d2b2d4369d9f50b483a4fd8af8a "githalytics.com")](http://githalytics.com/mroberts3000/AWorkEfficientGpuAlgorithmForLevelSetSegmentation)
