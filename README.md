@@ -1,4 +1,4 @@
-![Alt text](/documentation/results/TitlePageWeb.png)
+<a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/TitlePageWeb.png)</a>
 
 <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>A Work-Efficient GPU Algorithm for Level Set Segmentation</a>  
 Mike Roberts, Jeff Packer, Mario Costa Sousa, Joseph Ross Mitchell  
