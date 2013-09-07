@@ -1,10 +1,17 @@
-### A Work-Efficient GPU Algorithm For Level Set Segmentation
+<a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/Brainweb-3D-Composite-1-6.png)</a>
 
-C++/CUDA system implementing the paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
+<p align="center">
+  <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>A Work-Efficient GPU Algorithm for Level Set Segmentation</a><br>
+  Mike Roberts, Jeff Packer, Mario Costa Sousa, Joseph Ross Mitchell<br>
+  High Performance Graphics 2010
+</p>
+<p align="center">
+  <b>The source code and precompiled binaries available here are provided for non-commercial research purposes only.</b>
+</p>
 
-### Disclaimer
+### Introduction
 
-The source code and precompiled binaries available here are provided for non-commercial research purposes only.
+This repository contains a C++/CUDA system that implements the paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
 
 ### Requirements 
 
@@ -19,8 +26,7 @@ Precompiled binaries are available <a href='http://graphics.stanford.edu/~mlrobe
 
 ### Build Instructions
 
-* Download the SDK zip file.
-  * http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/data/hpg_2010_sdk.zip
+* Download the <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/data/hpg_2010_sdk.zip'>SDK zip file</a>.
 * Unzip the SDK zip file into the code folder.  
 * Open code\gpuseg\build\gpuseg.sln in Visual Studio 2008.
 * Set the gpuseg project to be the startup project.
@@ -38,5 +44,5 @@ In the sdk\msdev folder, I have included an install_highlighting_vs8.reg file to
 
 * You'll need at least an NVIDIA GTX 280 to get the same performance we report in the paper.
 * The binaries and code are both packaged with pre-configured project files, which are combinations of image data and meaningful parameter values. These project files are intended as an easy method of getting started with the application, and also as a way of easily reproducing the results in the paper.
-* The video on the project page offers rough guidance on the intended usage of the application.
+* The video on the <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>project page</a> offers rough guidance on the intended usage of the application.
 * This codebase started as an undergraduate video game project and slowly evolved into its current form, so you will certainly find some irrelevant old systems as you dig through it.
