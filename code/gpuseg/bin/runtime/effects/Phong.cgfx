@@ -1,0 +1,68 @@
+//
+// includes
+//
+#include "../shaders/Phong.cg"
+
+//
+// effect parameters
+//
+float4x4  modelViewProjectionMatrix  : WORLDVIEWPROJECTION;
+float3    objectSpaceLightPosition;
+float3    objectSpaceCameraPosition;
+float3    ambientColor;
+float3    diffuseColor;
+float3    specularColor;
+float     shininess;
+float     useDiffuseMap;
+sampler2D diffuseMapSampler = sampler_state
+{
+    WrapS          = ClampToEdge;
+    WrapT          = ClampToEdge;
+    MinFilter      = LinearMipMapLinear;
+    MagFilter      = Linear;
+};
+
+
+//
+// technique 
+//
+technique main
+{
+    pass main
+    {
+        // wireframe off
+        //PolygonMode = int2( FrontAndBack, Fill );
+
+        // color writing enabled
+        ColorMask = bool4( true, true, true, true );
+
+        // depth writing enabled
+        DepthMask = true;
+
+        // depth testing enabled
+        DepthTestEnable = true;
+
+        // stencil writing disabled
+        StencilTestEnable = false;
+
+        // shaders
+        VertexProgram = compile latest PhongVertexProgram(
+            modelViewProjectionMatrix );
+        
+#if defined(PLATFORM_WIN32)
+        GeometryProgram = compile latest PhongGeometryProgram();
+#elif defined(PLATFORM_OSX)
+    GeometryProgram = null;
+#endif
+                
+        FragmentProgram = compile arbfp1 PhongFragmentProgram(
+            useDiffuseMap,
+            ambientColor,
+            diffuseColor,
+            specularColor,
+            shininess,
+            objectSpaceLightPosition,
+            objectSpaceCameraPosition,
+            diffuseMapSampler );
+    }
+}

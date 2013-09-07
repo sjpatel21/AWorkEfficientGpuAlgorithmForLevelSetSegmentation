@@ -1,0 +1,55 @@
+struct TagVolumeVertexData
+{
+    float  packedNonNormalizedCoordinates : POSITION;
+};
+
+struct TagVolumeGeometryData
+{
+    float2 normalizedCoordinates   : POSITION;
+    int    nonNormalizedLayerIndex : TEXCOORD0;
+};
+
+void TagVolumeVertexProgram
+(
+    in      TagVolumeVertexData   vertexData,
+    uniform float4x4              orthographicProjectionMatrix,
+    out     TagVolumeGeometryData geometryData
+)
+{
+    int  packedNonNormalizedCoordinates = floatToRawIntBits( vertexData.packedNonNormalizedCoordinates );
+    int4 nonNormalizedCoordinatesInt;
+
+    nonNormalizedCoordinatesInt.x = ( packedNonNormalizedCoordinates & ( 0x3FF << 00 ) ) >> 00;
+    nonNormalizedCoordinatesInt.y = ( packedNonNormalizedCoordinates & ( 0x3FF << 10 ) ) >> 10;
+    nonNormalizedCoordinatesInt.z = ( packedNonNormalizedCoordinates & ( 0x3FF << 20 ) ) >> 20;
+    nonNormalizedCoordinatesInt.w = 1;
+
+    float4 nonNormalizedCoordinates = float4( nonNormalizedCoordinatesInt.x + 0.5f, nonNormalizedCoordinatesInt.y + 0.5f, nonNormalizedCoordinatesInt.z, nonNormalizedCoordinatesInt.w );
+
+    geometryData.normalizedCoordinates   = mul( orthographicProjectionMatrix, nonNormalizedCoordinates ).xy;
+    geometryData.nonNormalizedLayerIndex = nonNormalizedCoordinatesInt.z;
+}
+
+POINT POINT_OUT void TagVolumeGeometryProgram
+(
+    in AttribArray< float2 > normalizedCoordinates   : POSITION,
+    in AttribArray< int >    nonNormalizedLayerIndex : TEXCOORD0
+)
+{
+    for ( int i = 0; i < normalizedCoordinates.length; i++ )
+    {
+        emitVertex(
+            float4( normalizedCoordinates[ i ].x, normalizedCoordinates[ i ].y, 0, 1 ) : POSITION,
+            nonNormalizedLayerIndex[ i ]                                               : LAYER );
+    }
+}
+
+void TagVolumeFragmentProgram
+(
+    uniform float   tagValue,
+    out     float4  finalColor : COLOR
+)
+{
+    int tagValueInt = floor( tagValue );
+    finalColor      = int4( tagValueInt, tagValueInt, tagValueInt, 1 );
+}

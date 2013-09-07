@@ -1,0 +1,44 @@
+//
+// includes
+//
+#include "../shaders/TagVolume.cg"
+#include "../runtime/shaders/Simple.cg"
+
+//
+// effect parameters
+//
+float4x4 orthographicProjectionMatrix;
+float    tagValue;
+
+//
+// technique 
+//
+technique main
+{
+    pass main
+    {
+        // point smooth
+        PointSmoothEnable = false;
+        
+        // alpha blend disabled
+        AlphaTestEnable = false;
+        BlendEnable     = false;
+
+        // depth testing disabled
+        DepthTestEnable = false;
+
+        // stencil writing disabled
+        StencilTestEnable = false;
+
+        // shaders
+        VertexProgram = compile latest TagVolumeVertexProgram( orthographicProjectionMatrix );
+
+#if defined(PLATFORM_WIN32)
+        GeometryProgram = compile latest TagVolumeGeometryProgram();
+#elif defined(PLATFORM_OSX)
+    GeometryProgram = null;
+#endif
+
+        FragmentProgram = compile latest TagVolumeFragmentProgram( tagValue );
+    }
+}

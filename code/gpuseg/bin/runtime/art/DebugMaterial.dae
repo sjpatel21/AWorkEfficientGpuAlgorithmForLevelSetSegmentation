@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <library_effects>
+        <effect id="simpleEffect">
+            <profile_CG>
+                <include sid="simple-include" url="../effects/Simple.cgfx" />
+                <pass />
+            </profile_CG>
+        </effect>
+    </library_effects>
+    <library_materials>
+        <material id="debugMaterial" name="debugMaterial">
+            <instance_effect url="#simpleEffect">
+                <setparam ref="color">
+                    <float3>1 0 1</float3>
+                    <annotate name="UIWidget"><string>slider</string> </annotate>
+                    <annotate name="UIMin">   <float> 0 </float>  </annotate>
+                    <annotate name="UIMax">   <float> 1 </float>  </annotate>                    
+                </setparam>
+            </instance_effect>
+        </material>
+    </library_materials>
+</COLLADA>

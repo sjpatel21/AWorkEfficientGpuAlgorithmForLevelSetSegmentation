@@ -1,0 +1,6 @@
+#ifndef PYTHON_CONFIG_HPP
+#define PYTHON_CONFIG_HPP
+
+//#define ENABLE_SCRIPT_RELOADING
+
+#endif

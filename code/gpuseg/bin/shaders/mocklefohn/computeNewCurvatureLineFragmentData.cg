@@ -1,0 +1,10 @@
+struct computeNewCurvatureLineFragmentData
+{
+	float4 clipSpacePosition			: POSITION;
+	float2 textureCoordinates		 	: TEXCOORD0;
+	float2 upstairsNeighbor				: TEXCOORD1;
+	float2 downstairsNeighbor			: TEXCOORD2;
+	float2 frontNeighbor					: TEXCOORD3;
+	float2 frontUpstairsNeighbor		: TEXCOORD4;
+	float2 frontDownstairsNeighbor	: TEXCOORD5;
+};

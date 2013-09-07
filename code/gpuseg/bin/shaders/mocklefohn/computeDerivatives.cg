@@ -1,0 +1,315 @@
+#include "shaders/mockLefohn/constants.cg"
+
+struct sampleStruct
+{
+	float u0, u1, u2, u3, u4, u5, u6, u7, u8;
+	float u0_Up, u1_Up, u2_Up, u3_Up, u4_Up, u5_Up, u6_Up, u7_Up, u8_Up;
+	float u0_Down, u1_Down, u2_Down, u3_Down, u4_Down, u5_Down, u6_Down, u7_Down, u8_Down;
+};
+
+struct derivativeStruct
+{
+	float Dx, Dy, Dz;
+	float Dx_Up, Dy_Up, Dz_Up;
+	float Dx_Down, Dy_Down, Dz_Down;
+	float Dx_UpY, Dx_DownY, Dx_DownZ, Dx_UpZ;
+	float Dy_UpX, Dy_DownX, Dy_DownZ, Dy_UpZ;
+	float Dz_UpX, Dz_DownX, Dz_DownY, Dz_UpY;
+};
+
+void getPointSamples(in float2 textureCoordinates, in float2 upstairsNeigh,
+										in float2 downstairsNeigh, in float2 frontNeigh,
+										in float2 frontUpstairsNeigh, in float2 frontDownstairsNeigh,
+										in float2 leftNeigh, in float2 leftUpstairsNeigh,
+										in float2 leftDownstairsNeigh, in float2 frontLeftNeigh,
+										in float2 frontLeftUpstairsNeigh, in float2 frontLeftDownstairsNeigh,
+										uniform sampler2D levelSetSampler,
+										out sampleStruct samples)
+{
+	// Neighborhood on same level.
+	samples.u0 = tex2D( levelSetSampler, (frontNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u1 = tex2D( levelSetSampler, (frontNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u2 = tex2D( levelSetSampler, (textureCoordinates + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3 = tex2D( levelSetSampler, (textureCoordinates + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4 = tex2D( levelSetSampler, (textureCoordinates + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5 = tex2D( levelSetSampler, (textureCoordinates + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6 = tex2D( levelSetSampler, (leftNeigh + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7 = tex2D( levelSetSampler, (leftNeigh + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8 = tex2D( levelSetSampler, (frontLeftNeigh + OFF_8) * TEX_DIMS_VEC2 ).x;
+	
+	// Upstairs neighborhood	
+	samples.u0_Up = 0.0;//tex2D( levelSetSampler, (frontUpstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u1_Up = tex2D( levelSetSampler, (frontUpstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u2_Up = 0.0;//tex2D( levelSetSampler, (upstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6_Up = 0.0;//tex2D( levelSetSampler, (leftUpstairsNeigh + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7_Up = tex2D( levelSetSampler, (leftUpstairsNeigh + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8_Up = 0.0;//tex2D( levelSetSampler, (frontLeftUpstairsNeigh + OFF_8) * TEX_DIMS_VEC2 ).x;
+	
+	// Downstairs neighborhood	
+	samples.u0_Down = 0.0;//tex2D( levelSetSampler, (frontDownstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u1_Down = tex2D( levelSetSampler, (frontDownstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u2_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6_Down = 0.0;//tex2D( levelSetSampler, (leftDownstairsNeigh + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7_Down = tex2D( levelSetSampler, (leftDownstairsNeigh + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8_Down = 0.0;//tex2D( levelSetSampler, (frontLeftDownstairsNeigh + OFF_8) * TEX_DIMS_VEC2 ).x;
+}
+
+void getLineSamples(in float2 textureCoordinates, in float2 upstairsNeigh,
+										in float2 downstairsNeigh, in float2 frontNeigh,
+										in float2 frontUpstairsNeigh, in float2 frontDownstairsNeigh,
+										uniform sampler2D levelSetSampler,
+										out sampleStruct samples)
+{
+	// Neighborhood on same level.
+	samples.u0 = tex2D( levelSetSampler, (frontNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u1 = tex2D( levelSetSampler, (frontNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u2 = tex2D( levelSetSampler, (frontNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3 = tex2D( levelSetSampler, (textureCoordinates + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4 = tex2D( levelSetSampler, (textureCoordinates + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5 = tex2D( levelSetSampler, (textureCoordinates + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6 = tex2D( levelSetSampler, (textureCoordinates + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7 = tex2D( levelSetSampler, (textureCoordinates + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8 = tex2D( levelSetSampler, (textureCoordinates + OFF_8) * TEX_DIMS_VEC2 ).x;
+	
+	// Upstairs neighborhood	
+	samples.u0_Up = 0.0;//tex2D( levelSetSampler, (frontUpstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u1_Up = tex2D( levelSetSampler, (frontUpstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u2_Up = 0.0;//tex2D( levelSetSampler, (frontUpstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6_Up = 0.0;//tex2D( levelSetSampler, (upstairsNeigh + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8_Up = 0.0;//tex2D( levelSetSampler, (upstairsNeigh + OFF_8) * TEX_DIMS_VEC2 ).x;
+	
+	// Downstairs neighborhood	
+	samples.u0_Down = 0.0;//tex2D( levelSetSampler, (frontDownstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u1_Down = tex2D( levelSetSampler, (frontDownstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u2_Down = 0.0;//tex2D( levelSetSampler, (frontDownstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_8) * TEX_DIMS_VEC2 ).x;
+}
+
+void getQuadSamples(in float2 textureCoordinates, in float2 upstairsNeigh,
+										in float2 downstairsNeigh, uniform sampler2D levelSetSampler,
+										out sampleStruct samples)
+{
+	// Get the samples from three layers
+	// Uses u0 through u8 such that
+	// 6 7 8
+	// 3 4 5
+	// 0 1 2
+	// is the grid.
+	
+	// Neighborhood on same level.
+	samples.u0 = tex2D( levelSetSampler, (textureCoordinates + OFF_0) * TEX_DIMS_VEC2 ).x;
+	samples.u1 = tex2D( levelSetSampler, (textureCoordinates + OFF_1) * TEX_DIMS_VEC2 ).x;
+	samples.u2 = tex2D( levelSetSampler, (textureCoordinates + OFF_2) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3 = tex2D( levelSetSampler, (textureCoordinates + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4 = tex2D( levelSetSampler, (textureCoordinates + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5 = tex2D( levelSetSampler, (textureCoordinates + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6 = tex2D( levelSetSampler, (textureCoordinates + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7 = tex2D( levelSetSampler, (textureCoordinates + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8 = tex2D( levelSetSampler, (textureCoordinates + OFF_8) * TEX_DIMS_VEC2 ).x;
+	
+	// Upstairs neighborhood	
+	samples.u0_Up = 0.0;//tex2D( levelSetSampler, (upstairsNeigh + OFF_0) * TEX_DIMS_VEC2 ).x;
+	samples.u1_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_1) * TEX_DIMS_VEC2 ).x;
+	samples.u2_Up = 0.0;//tex2D( levelSetSampler, (upstairsNeigh + OFF_2) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6_Up = 0.0;//tex2D( levelSetSampler, (upstairsNeigh + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7_Up = tex2D( levelSetSampler, (upstairsNeigh + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8_Up = 0.0;//tex2D( levelSetSampler, (upstairsNeigh + OFF_8) * TEX_DIMS_VEC2 ).x;
+	
+	// Downstairs neighborhood	
+	samples.u0_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_0) * TEX_DIMS_VEC2 ).x;
+	samples.u1_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_1) * TEX_DIMS_VEC2 ).x;
+	samples.u2_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_2) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u3_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_3) * TEX_DIMS_VEC2 ).x;
+	samples.u4_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_4) * TEX_DIMS_VEC2 ).x;
+	samples.u5_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_5) * TEX_DIMS_VEC2 ).x;
+	
+	samples.u6_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_6) * TEX_DIMS_VEC2 ).x;
+	samples.u7_Down = tex2D( levelSetSampler, (downstairsNeigh + OFF_7) * TEX_DIMS_VEC2 ).x;
+	samples.u8_Down = 0.0;//tex2D( levelSetSampler, (downstairsNeigh + OFF_8) * TEX_DIMS_VEC2 ).x;
+	
+}
+
+void computeDerivatives(in sampleStruct samples, out derivativeStruct derivatives)
+{
+	derivatives.Dx = (samples.u5 - samples.u3) * 0.5;
+	derivatives.Dy = (samples.u7 - samples.u1) * 0.5;
+	derivatives.Dz = (samples.u4_Up - samples.u4_Down) * 0.5;
+	
+	derivatives.Dx_Up = samples.u5 - samples.u4;
+	derivatives.Dy_Up = samples.u7 - samples.u4;
+	derivatives.Dz_Up = samples.u4_Up - samples.u4;
+	
+	derivatives.Dx_Down = samples.u4 - samples.u3;
+	derivatives.Dy_Down = samples.u4 - samples.u1;
+	derivatives.Dz_Down = samples.u4 - samples.u4_Down;
+	
+	derivatives.Dx_UpY = (samples.u8 - samples.u6) * 0.5;
+	derivatives.Dx_DownY = (samples.u2 - samples.u0) * 0.5;
+	derivatives.Dx_UpZ = (samples.u5_Up - samples.u3_Up) * 0.5;
+	derivatives.Dx_DownZ = (samples.u5_Down - samples.u3_Down) * 0.5;
+	
+	derivatives.Dy_UpX = (samples.u8 - samples.u2) * 0.5;
+	derivatives.Dy_DownX = (samples.u6 - samples.u0) * 0.5;
+	derivatives.Dy_UpZ = (samples.u7_Up - samples.u1_Up) * 0.5;
+	derivatives.Dy_DownZ = (samples.u7_Down - samples.u1_Down) * 0.5;
+	
+	derivatives.Dz_UpX = (samples.u5_Up - samples.u5_Down) * 0.5;
+	derivatives.Dz_DownX = (samples.u3_Up - samples.u3_Down) * 0.5;
+	derivatives.Dz_UpY = (samples.u7_Up - samples.u7_Down) * 0.5;
+	derivatives.Dz_DownY = (samples.u1_Up - samples.u1_Down) * 0.5;
+}
+
+void computeGradient( in derivativeStruct derivatives, out float gradient )
+{
+	float3 phi_Max, phi_Min;
+	
+	float a = max( derivatives.Dx_Up, 0.0 );
+	float b = max( -derivatives.Dx_Down, 0.0 );
+	
+	phi_Max.x = sqrt(a*a + b*b);
+	
+	a = max( derivatives.Dy_Up, 0.0 );
+	b = max( -derivatives.Dy_Down, 0.0 );
+	
+	phi_Max.y = sqrt(a*a + b*b);
+	
+	a = max( derivatives.Dz_Up, 0.0 );
+	b = max( -derivatives.Dz_Down, 0.0 );
+	
+	phi_Max.z = sqrt(a*a + b*b);
+	
+	a = min( derivatives.Dx_Up, 0.0 );
+	b = min( -derivatives.Dx_Down, 0.0 );
+	
+	phi_Min.x = sqrt(a*a + b*b);
+	
+	a = min( derivatives.Dy_Up, 0.0 );
+	b = min( -derivatives.Dy_Down, 0.0 );
+	
+	phi_Min.y = sqrt(a*a + b*b);
+	
+	a = min( derivatives.Dz_Up, 0.0 );
+	b = min( -derivatives.Dz_Down, 0.0 );
+	
+	phi_Min.z = sqrt(a*a + b*b);
+	
+	float rand = noise(phi_Max.y);
+	
+	float outGrad = 0.0;
+	
+	if(rand > 0.5)
+	{
+		outGrad = dot(phi_Max, phi_Max);
+	}
+	else
+	{
+		outGrad = dot(phi_Min, phi_Min);
+	}
+	
+	if( isnan(outGrad) )
+	{
+		outGrad = 1.0;
+	}
+	
+	gradient = outGrad;
+}
+
+void computeCurvature( in derivativeStruct derivatives, out float curvature )
+{
+	float3 n_Up;
+	float3 n_Down;
+	
+	float XDenominator = derivatives.Dx_Up * derivatives.Dx_Up;
+	float temp1 = (derivatives.Dy_UpX + derivatives.Dy) * 0.5;
+	temp1 = temp1 * temp1;
+	float temp2 = (derivatives.Dz_UpX + derivatives.Dz) * 0.5;
+	temp2 = temp2 * temp2;
+	XDenominator = XDenominator + temp1 + temp2;
+	
+	float YDenominator = derivatives.Dy_Up * derivatives.Dy_Up;
+	temp1 = (derivatives.Dx_UpY + derivatives.Dx) * 0.5;
+	temp1 = temp1 * temp1;
+	temp2 = (derivatives.Dz_UpY + derivatives.Dz) * 0.5;
+	temp2 = temp2 * temp2;
+	YDenominator = YDenominator + temp1 + temp2;
+	
+	float ZDenominator = derivatives.Dz_Up * derivatives.Dz_Up;
+	temp1 = (derivatives.Dx_UpZ + derivatives.Dx) * 0.5;
+	temp1 = temp1 * temp1;
+	temp2 = (derivatives.Dy_UpZ + derivatives.Dy) * 0.5;
+	temp2 = temp2 * temp2;
+	ZDenominator = ZDenominator + temp1 + temp2;
+	
+	n_Up.x = derivatives.Dx_Up / sqrt(XDenominator);
+	n_Up.y = derivatives.Dy_Up / sqrt(YDenominator);
+	n_Up.z = derivatives.Dz_Up / sqrt(ZDenominator);
+	
+	XDenominator = derivatives.Dx_Down * derivatives.Dx_Down;
+	temp1 = (derivatives.Dy_DownX + derivatives.Dy) * 0.5;
+	temp1 = temp1 * temp1;
+	temp2 = (derivatives.Dz_DownX + derivatives.Dz) * 0.5;
+	temp2 = temp2 * temp2;
+	XDenominator = XDenominator + temp1 + temp2;
+	
+	YDenominator = derivatives.Dy_Down * derivatives.Dy_Down;
+	temp1 = (derivatives.Dx_DownY + derivatives.Dx) * 0.5;
+	temp1 = temp1 * temp1;
+	temp2 = (derivatives.Dz_DownY + derivatives.Dz) * 0.5;
+	temp2 = temp2 * temp2;
+	YDenominator = YDenominator + temp1 + temp2;
+	
+	ZDenominator = derivatives.Dz_Down * derivatives.Dz_Down;
+	temp1 = (derivatives.Dx_DownZ + derivatives.Dx) * 0.5;
+	temp1 = temp1 * temp1;
+	temp2 = (derivatives.Dy_DownZ + derivatives.Dy) * 0.5;
+	temp2 = temp2 * temp2;
+	ZDenominator = ZDenominator + temp1 + temp2;
+	
+	n_Down.x = derivatives.Dx_Down / sqrt(XDenominator);
+	n_Down.y = derivatives.Dy_Down / sqrt(YDenominator);
+	n_Down.z = derivatives.Dz_Down / sqrt(ZDenominator);
+	
+	float3 partials = n_Up - n_Down;
+	
+	curvature = (partials.x + partials.y + partials.z) * 0.5;
+	
+	if( isnan(curvature) )
+	{
+		curvature = 1.0;
+	}
+}

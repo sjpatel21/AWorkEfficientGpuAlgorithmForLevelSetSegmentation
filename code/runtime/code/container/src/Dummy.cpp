@@ -1,0 +1,8 @@
+namespace container
+{
+
+class Dummy
+{
+};
+
+}

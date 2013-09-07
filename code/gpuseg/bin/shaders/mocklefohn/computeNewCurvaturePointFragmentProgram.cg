@@ -1,0 +1,71 @@
+#include "shaders/mockLefohn/constants.cg"
+#include "shaders/mockLefohn/computeDerivatives.cg"
+#include "shaders/mockLefohn/computeNewCurvaturePointFragmentData.cg"
+
+
+void computeNewCurvaturePointFragmentProgram
+(
+	in computeNewCurvaturePointFragmentData fragmentData,
+	
+	uniform sampler2D levelSetSampler,
+	
+	out float4 finalColorOne : COLOR0,
+	out float4 finalColorTwo : COLOR1
+)
+{	
+	float2 thisCoords = TEXCOORD_FLIP(fragmentData.textureCoordinates);
+	thisCoords = thisCoords * TEX_DIMS_VEC2;
+	
+	float2 upstairsCoords = TEXCOORD_FLIP(fragmentData.upstairsDownstairsNeighbor.xy);
+	upstairsCoords = upstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 downstairsCoords = TEXCOORD_FLIP(fragmentData.upstairsDownstairsNeighbor.zw);
+	downstairsCoords = downstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 frontCoords = TEXCOORD_FLIP(fragmentData.frontAndFrontUpstairsNeighbor.xy);
+	frontCoords = frontCoords * TEX_DIMS_VEC2;
+	
+	float2 frontUpstairsCoords = TEXCOORD_FLIP(fragmentData.frontAndFrontUpstairsNeighbor.zw);
+	frontUpstairsCoords = frontUpstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 frontDownstairsCoords = TEXCOORD_FLIP(fragmentData.frontDownstairsAndLeftNeighbor.xy);
+	frontDownstairsCoords = frontDownstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 leftCoords = TEXCOORD_FLIP(fragmentData.frontDownstairsAndLeftNeighbor.zw);
+	leftCoords = leftCoords * TEX_DIMS_VEC2;
+	
+	float2 leftUpstairsCoords = TEXCOORD_FLIP(fragmentData.leftUpstairsDownstairsNeighbor.xy);
+	leftUpstairsCoords = leftUpstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 leftDownstairsCoords = TEXCOORD_FLIP(fragmentData.leftUpstairsDownstairsNeighbor.zw);
+	leftDownstairsCoords = leftDownstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 frontLeftCoords = TEXCOORD_FLIP(fragmentData.frontLeftAndFrontLeftUpstairsNeighbor.xy);
+	frontLeftCoords = frontLeftCoords * TEX_DIMS_VEC2;
+	
+	float2 frontLeftUpstairsCoords = TEXCOORD_FLIP(fragmentData.frontLeftAndFrontLeftUpstairsNeighbor.zw);
+	frontLeftUpstairsCoords = frontLeftUpstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 frontLeftDownstairsCoords = TEXCOORD_FLIP(fragmentData.frontLeftDownstairsNeighbor.xy);
+	frontLeftDownstairsCoords = frontLeftDownstairsCoords * TEX_DIMS_VEC2;
+	
+	sampleStruct samples;
+	derivativeStruct derivatives;
+	
+	getPointSamples(thisCoords, upstairsCoords, downstairsCoords,
+								 frontCoords, frontUpstairsCoords, frontDownstairsCoords,
+								 leftCoords, leftUpstairsCoords, leftDownstairsCoords,
+								 frontLeftCoords, frontLeftUpstairsCoords, frontLeftDownstairsCoords,
+								 levelSetSampler, samples);
+								 
+	computeDerivatives(samples, derivatives);
+	
+	float curvature = 0.0;
+	float gradient = 0.0;
+	
+	computeCurvature(derivatives, curvature);
+	computeGradient(derivatives, gradient);
+	
+	finalColorOne = float4(curvature, curvature, curvature, 1.0);
+	finalColorTwo = float4(gradient, gradient, gradient, 1.0);
+}

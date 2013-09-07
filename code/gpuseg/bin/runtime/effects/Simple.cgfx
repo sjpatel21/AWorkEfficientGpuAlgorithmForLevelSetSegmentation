@@ -1,0 +1,48 @@
+//
+// includes
+//
+#include "../shaders/Simple.cg"
+
+//
+// effect parameters
+//
+float3   color;
+float4x4 modelViewProjectionMatrix : WORLDVIEWPROJECTION;
+
+//
+// technique 
+//
+technique main
+{
+    pass main
+    {
+        // wireframe off
+        PolygonMode = int2( FrontAndBack, Fill );
+
+        // color writing enabled
+        ColorMask = bool4( true, true, true, true );
+
+        // depth writing enabled
+        DepthMask = true;
+
+        // depth testing enabled
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+
+        // stencil writing disabled
+        StencilTestEnable = false;
+
+        // shaders
+        VertexProgram = compile latest SimpleVertexProgram(
+            modelViewProjectionMatrix );
+
+#if defined(PLATFORM_WIN32)
+        GeometryProgram = compile latest SimpleGeometryProgram();
+#elif defined(PLATFORM_OSX)
+    GeometryProgram = null;
+#endif
+
+        FragmentProgram = compile latest SimpleFragmentProgram(
+            float4( color, 1 ) );            
+    }
+}

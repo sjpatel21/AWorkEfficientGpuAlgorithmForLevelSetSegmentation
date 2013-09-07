@@ -1,0 +1,6 @@
+#ifndef MATH_CONFIG_HPP
+#define MATH_CONFIG_HPP
+
+#define CONVERT_TO_AND_FROM_FCOLLADA
+
+#endif

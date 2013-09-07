@@ -1,0 +1,3 @@
+<Root>
+    <GPUSegProject isSigned="0" numBytesPerVoxel="0" upDirectionX="0" parametersFile="parameters/brain.par" upDirectionY="0" upDirectionZ="1" numVoxelsX="0" dataFile="data/brain" numVoxelsY="0" zAnisotropy="1" numVoxelsZ="0" />
+</Root>

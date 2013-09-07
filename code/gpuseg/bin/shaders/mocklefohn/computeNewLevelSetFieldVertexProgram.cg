@@ -1,0 +1,15 @@
+#include "shaders/mockLefohn/computeNewLevelSetFieldVertexData.cg"
+#include "shaders/mockLefohn/computeNewLevelSetFieldFragmentData.cg"
+
+void computeNewLevelSetFieldVertexProgram
+(
+    in      computeNewLevelSetFieldVertexData   vertexData,
+    
+    uniform float4x4 modelProjectionMatrix : WORLDVIEWPROJECTION,
+    
+    out     computeNewLevelSetFieldFragmentData fragmentData
+)
+{
+	fragmentData.clipSpacePosition = mul( modelProjectionMatrix, vertexData.objectSpacePosition );
+	fragmentData.textureCoordinates = vertexData.objectSpacePosition.xy;
+}

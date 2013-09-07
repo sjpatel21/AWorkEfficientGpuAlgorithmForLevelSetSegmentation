@@ -1,0 +1,8 @@
+#ifndef CONTENT_CONFIG_HPP
+#define CONTENT_CONFIG_HPP
+
+#ifdef BUILD_DEBUG
+//#define ENABLE_ASSET_RELOADING
+#endif
+
+#endif

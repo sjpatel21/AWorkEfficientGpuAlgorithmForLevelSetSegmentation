@@ -1,0 +1,131 @@
+\phantomsection
+\fancyhead[RO,LE]{\thepage}
+\fancyfoot{} 
+\chapter{Derivation of the Active Set Membership Condition $ \varsigma_{2} $ }
+\label{app:temporal}
+
+I define the set of all user-specified parameters to the speed function as $H$ and the user-specified image as $I$. I define $\eta \left({\mathbf x}\right)=\{{\mathbf x},{{\mathbf n}}^{{\mathbf x}}_0,{{\mathbf n}}^{{\mathbf x}}_1,{{\mathbf n}}^{{\mathbf x}}_2,\ldots ,{{\mathbf n}}^{{\mathbf x}}_k\}$ to be the set of coordinates in the immediate neighborhood of some voxel ${\mathbf x}$. I define the set of all of level set field values in the immediate neighborhood of ${\mathbf x}$ at time $t$ as follows:
+%*******************************************************************************
+\begin{equation}
+\Phi \left({\mathbf x},t\right)=\{\phi\left({\mathbf x},t\right),\phi\left({{\mathbf n}}^{{\mathbf x}}_0,t\right),\phi\left({{\mathbf n}}^{{\mathbf x}}_1,t\right),{\phi({\mathbf n}}^{{\mathbf x}}_2,t),\ldots ,{\phi({\mathbf n}}^{{\mathbf x}}_k,t)\}
+\end{equation}
+%*******************************************************************************
+I assume that the speed function $F({\mathbf x},t)$ is a function of the level set values around ${\mathbf x}$ during the previous iteration $\Phi \left({\mathbf x},t-\Delta t\right)$, the image $I$, and the set of user-specified parameters $H$. I assume without loss of generality that $\Delta t\ne 0$.
+
+I want to prove that ${\forall }_{{\mathbf n}\in \eta \left({\mathbf x}\right)}:\phi\left({\mathbf n},t-\Delta t\right)=\phi({\mathbf n},t-2\Delta t)$ implies $\phi\left({\mathbf x},t\right)=\phi\left({\mathbf x},t-\Delta t\right)$. If this claim is true, it means that I can exclude $\mathbf{x}$ from the active set at time $t$ if ${\forall }_{{\mathbf n}\in \eta \left({\mathbf x}\right)}:\phi\left({\mathbf n},t-\Delta t\right)=\phi({\mathbf n},t-2\Delta t)$. I begin by proving a useful lemma.
+
+\medskip
+
+\medskip
+
+\medskip
+
+\medskip
+
+\begin{quote}
+\textbf{Lemma} \ \
+$\Phi \left({\mathbf x},t-\Delta t\right)=\Phi \left({\mathbf x},t-2\Delta t\right)$ implies $F\left({\mathbf x},t\right)=F\left({\mathbf x},t-\Delta t\right)$.
+
+\textbf{Proof} \ \ \ \ \ I assume $\Phi \left({\mathbf x},t-\Delta t\right)=\Phi \left({\mathbf x},t-2\Delta t\right)$. By definition,
+%*******************************************************************************
+\begin{equation}
+F\left({\mathbf x},t\right)=f(\Phi \left({\mathbf x},t-\Delta t\right),I,H) \mbox{ for some function } f.
+\end{equation}
+%*******************************************************************************
+Therefore I get,
+%*******************************************************************************
+\begin{equation}
+F\left({\mathbf x},t-\Delta t\right)=f\left(\Phi \left({\mathbf x},t-2\Delta t\right),I,H\right)=f\left(\Phi \left({\mathbf x},t-\Delta t\right),I,H\right)=F\left({\mathbf x},t\right)
+\end{equation}
+%*******************************************************************************
+\qed
+\end{quote}
+
+\medskip
+
+\medskip
+
+\medskip
+
+\medskip
+
+Now I move onto my central proof.
+
+\medskip
+
+\medskip
+
+\medskip
+
+\medskip
+
+\begin{quote}
+\textbf{Claim} \ \ \ \ 
+${\forall }_{{\mathbf n}\in \eta \left({\mathbf x}\right)}:\phi\left({\mathbf n},t-\Delta t\right)=\phi({\mathbf n},t-2\Delta t)$ implies $\phi\left({\mathbf x},t\right)=\phi\left({\mathbf x},t-\Delta t\right)$.
+
+\textbf{Proof} \ \ \ \ \
+I prove by contradiction. I assume,
+%*******************************************************************************
+\begin{equation}
+{\forall }_{{\mathbf n}\in \eta \left({\mathbf x}\right)}:\phi\left({\mathbf n},t-\Delta t\right)=\phi({\mathbf n},t-2\Delta t)
+\end{equation}
+%*******************************************************************************
+From this expression and the definition of $\Phi$, I get,
+%*******************************************************************************
+\begin{equation}
+\Phi \left({\mathbf x},t-\Delta t\right)=\Phi \left({\mathbf x},t-2\Delta t\right)
+\end{equation}
+%*******************************************************************************
+From the lemma~above I get $F\left({\mathbf x},t\right)=F\left({\mathbf x},t-\Delta t\right)$. From the definition of $\nabla \phi$, I get $\nabla \phi\left({\mathbf x},t - \Delta t\right) = \nabla \phi\left({\mathbf x},t - 2 \Delta t\right)$.
+
+\medskip
+
+\medskip
+
+\medskip
+
+\medskip
+
+I assume for the sake of contradiction that $\phi\left({\mathbf x},t\right)\ne \phi\left({\mathbf x},t-\Delta t\right)$. Substituting this inequality into Equation~\ref{eq:levelseteq} I get,
+%*******************************************************************************
+\begin{equation}
+\phi\left({\mathbf x},t\right)-\phi\left({\mathbf x},t-\Delta t\right)=\Delta tF\left({\mathbf x},t\right)\left|\nabla \phi\left({\mathbf x},t-\Delta t\right)\right|\ne 0
+\end{equation}
+%*******************************************************************************
+
+From the zero product rule I get $F\left({\mathbf x},t\right)\ne 0$ and $\left|\nabla \phi\left({\mathbf x},t-\Delta t\right)\right|\ne 0$.
+
+\medskip
+
+\medskip
+
+\medskip
+
+\medskip
+
+From my initial assumption that ${\forall }_{{\mathbf n}\in \eta \left({\mathbf x}\right)}:\phi\left({\mathbf n},t-\Delta t\right)=\phi({\mathbf n},t-2\Delta t)$, and since ${\mathbf x}\in \eta \left({\mathbf x}\right)$, I get $\phi\left({\mathbf x},t-\Delta t\right)=\phi({\mathbf x},t-2\Delta t)$. Substituting the right hand side of this expression into Equation~\ref{eq:levelseteq} I get,
+%*******************************************************************************
+\begin{equation}
+\phi\left({\mathbf x},t-\Delta t\right)=\phi\left({\mathbf x},t-\Delta t\right)+\Delta tF\left({\mathbf x},t-\Delta t\right)\left|\nabla \phi\left({\mathbf x},t-2\Delta t\right)\right|
+\end{equation}
+%*******************************************************************************
+or equivalently,
+%*******************************************************************************
+\begin{equation}
+\Delta tF\left({\mathbf x},t-\Delta t\right)\left|\nabla \phi\left({\mathbf x},t-2\Delta t\right)\right|=0
+\end{equation}
+%*******************************************************************************
+From this expression and the zero product rule I get either $F\left({\mathbf x},t-\Delta t\right)=0$ or $\left|\nabla \phi\left({\mathbf x},t-2\Delta t\right)\right|=0$.
+
+\medskip
+
+\medskip
+
+\medskip
+
+\medskip
+
+I assume for the moment that $F\left({\mathbf x},t-\Delta t\right)=0$. Since $F\left({\mathbf x},t\right)=F\left({\mathbf x},t-\Delta t\right)$ I get $F\left({\mathbf x},t\right)=0$ which leads to a contradiction. Now I assume for the moment that $\left|\nabla \phi\left({\mathbf x},t-2\Delta t\right)\right|=0$. From this expression, and since $\nabla \phi\left({\mathbf x},t - \Delta t\right) = \nabla \phi\left({\mathbf x},t - 2 \Delta t\right)$, I get $\left|\nabla \phi\left({\mathbf x},t-\Delta t\right)\right|=0$ which also leads to a contradiction. Therefore $\phi\left({\mathbf x},t\right)=\phi\left({\mathbf x},t-\Delta t\right)$. \qed
+
+\end{quote}
+

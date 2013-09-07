@@ -1,0 +1,14 @@
+\newpage
+\phantomsection
+\altchapter{Abstract}
+
+Identifying distinct regions in images -- a task known as \emph{segmentation} -- is an important task in computer vision and diagnostic medicine. The level set method is a powerful, flexible, and accurate numerical technique for image segmentation under challenging conditions since the segmentation process can depend on image properties (e.g. color or texture) and can enforce geometric constraints (e.g. smoothness) on the segmented regions. However, the flexibility of the level set method has historically resulted in long computation times and therefore limited clinical utility. In this thesis I describe a novel parallel level set segmentation algorithm that dramatically improves computational efficiency without affecting segmentation accuracy.
+
+The level set method for image segmentation~begins with an implicitly represented seed surface embedded within a regular scalar grid. The level set method deforms this surface to envelop a corresponding region-of-interest in the original image by iteratively solving a partial differential equation defined at each grid element. Previous algorithms avoid unnecessary  computations by updating only those
+grid elements near the deforming surface.
+
+In this thesis I prove that even computations near the surface can be avoided in regions where the grid has locally converged. I describe a novel parallel algorithm  that leverages this insight and performs $O(n)$ work in $O(\log_2 n)$ steps, in contrast to previous parallel algorithms which perform  $O(n)$ work in $O(n)$ steps. I apply my algorithm to 3D medical images and I demonstrate significant peformance advantages over previous algorithms. In typical clinical scenarios, my algorithm reduces the total number of processed grid elements by $16 \times$ and is $14 \times$ faster than previous parallel algorithms with equal accuracy in all experiments. My algorithm runs entirely on commodity graphics processing units without requiring any additional data processing on the CPU, thereby enabling interactive 3D visualization and real-time control of the evolving segmentation.
+
+
+
+

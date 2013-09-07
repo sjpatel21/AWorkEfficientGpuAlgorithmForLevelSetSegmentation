@@ -1,0 +1,23 @@
+#define EPSILON 0.0000001
+
+
+// this is 1/4096
+#define TEX_DIMS 0.000244140625 
+#define TEX_DIMS_VEC2 float2(TEX_DIMS, TEX_DIMS)
+#define TILE_SIZE 16.0
+
+// Offsets
+#define OFF_0 float2(-1.0, -1.0)
+#define OFF_1 float2(0.0, -1.0)
+#define OFF_2 float2(1.0, -1.0)
+#define OFF_3 float2(-1.0, 0.0)
+#define OFF_4 float2(0.0, 0.0)
+#define OFF_5 float2(1.0, 0.0)
+#define OFF_6 float2(-1.0, 1.0)
+#define OFF_7 float2(0.0, 1.0)
+#define OFF_8 float2(1.0, 1.0)
+
+
+
+// Flip around the texture coordinates
+#define TEXCOORD_FLIP(origCoords) (float2(origCoords.x, 4096.0 - origCoords.y))

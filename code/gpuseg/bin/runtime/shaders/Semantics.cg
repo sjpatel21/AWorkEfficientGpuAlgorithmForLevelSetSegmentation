@@ -1,0 +1,6 @@
+//
+// these need to agree with loaded geometry (eg. the geometry loader and texture loader)
+//
+#define TEXCOORD_DIFFUSE_MAP            TEXCOORD0
+#define TEXCOORD_LIGHT_MAP              TEXCOORD1
+#define TEXCOORD_NORMAL_MAP             TEXCOORD2

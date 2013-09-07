@@ -1,0 +1,78 @@
+//
+// includes
+//
+#include "../shaders/Simple.cg"
+
+//
+// effect parameters
+//
+float3   wireFrameColor;
+float4x4 modelViewProjectionMatrix : WORLDVIEWPROJECTION;
+
+//
+// technique 
+//
+technique main
+{
+    pass depthFillPass
+    {
+        // wireframe off
+        PolygonMode = int2( FrontAndBack, Fill );
+
+        // color writing disabled
+        ColorMask = bool4( false, false, false, false );
+
+        // depth writing enabled
+        DepthMask = true;
+
+        // depth testing enabled
+        DepthTestEnable = true;
+
+        // stencil writing disabled
+        StencilTestEnable = false;
+
+        // shaders
+        VertexProgram = compile gp4vp SimpleVertexProgram(
+            modelViewProjectionMatrix );
+
+#if defined(PLATFORM_WIN32)
+        GeometryProgram = compile gp4gp SimpleGeometryProgram();
+#elif defined(PLATFORM_OSX)
+    GeometryProgram = null;
+#endif
+
+        FragmentProgram = null;
+    }
+
+    pass wireFramePass
+    {
+        // wireframe off
+        PolygonMode = int2( FrontAndBack, Line );
+
+        // color writing enabled
+        ColorMask = bool4( true, true, true, true );
+
+        // depth writing disabled
+        DepthMask = false;
+
+        // depth testing enabled
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+
+        // stencil writing disabled
+        StencilTestEnable = false;
+
+        // shaders
+        VertexProgram = compile latest SimpleVertexProgram(
+            modelViewProjectionMatrix );
+
+#if defined(PLATFORM_WIN32)
+        GeometryProgram = compile latest SimpleGeometryProgram();
+#elif defined(PLATFORM_OSX)
+    GeometryProgram = null;
+#endif
+
+        FragmentProgram = compile latest SimpleFragmentProgram(
+            float4( wireFrameColor, 1 ) );
+    }
+}

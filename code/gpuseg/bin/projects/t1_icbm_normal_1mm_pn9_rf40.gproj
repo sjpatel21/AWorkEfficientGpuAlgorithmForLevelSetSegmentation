@@ -1,0 +1,3 @@
+<Root>
+    <GPUSegProject isSigned="0" numBytesPerVoxel="1" upDirectionX="0" parametersFile="parameters/t1_icbm_normal_1mm_pn9_rf40.par" upDirectionY="0" upDirectionZ="1" numVoxelsX="181" dataFile="data/brainweb/t1_icbm_normal_1mm_pn9_rf40.raw" numVoxelsY="217" zAnisotropy="1" numVoxelsZ="181" />
+</Root>

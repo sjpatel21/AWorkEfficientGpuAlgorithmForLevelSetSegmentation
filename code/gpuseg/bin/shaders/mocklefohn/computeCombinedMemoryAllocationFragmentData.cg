@@ -1,0 +1,5 @@
+struct computeCombinedMemoryAllocationFragmentData
+{
+	float4 clipSpacePosition		: POSITION;
+	float2 textureCoordinates		: TEXCOORD0;
+};

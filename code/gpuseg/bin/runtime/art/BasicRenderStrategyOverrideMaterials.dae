@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <library_effects>
+        <effect id="debugTexCoordEffect">
+            <profile_CG>
+                <include sid="debugTexCoordInclude" url="../effects/DebugTexCoord.cgfx" />
+                <pass />
+            </profile_CG>
+        </effect>
+        <effect id="solidWireFrameEffect">
+          <profile_CG>
+            <include sid="solidWireFrameInclude" url="../effects/SolidWireFrame.cgfx" />
+            <pass />
+          </profile_CG>
+        </effect>
+    </library_effects>
+    <library_materials>
+        <material id="debugTexCoordMaterial" name="debugTexCoordMaterial">
+            <instance_effect url="#debugTexCoordEffect">
+            </instance_effect>
+        </material>
+        <material id="solidWireFrameMaterial" name="solidWireFrameMaterial">
+            <instance_effect url="#solidWireFrameEffect">
+                <setparam ref="wireFrameColor">
+                    <float3>0 1 0</float3>
+                    <annotate name="UIWidget"><string>slider</string> </annotate>
+                    <annotate name="UIMin">   <float>  0.0  </float>  </annotate>
+                    <annotate name="UIMax">   <float>  1.0  </float>  </annotate>                    
+                </setparam>
+            </instance_effect>
+        </material>              
+    </library_materials>
+</COLLADA>

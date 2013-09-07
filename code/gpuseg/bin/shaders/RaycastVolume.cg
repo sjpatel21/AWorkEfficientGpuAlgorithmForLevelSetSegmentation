@@ -1,0 +1,901 @@
+#define PI                        ( 3.14159265 )
+#define PI_OVER_2                 ( PI / 2.0 )
+#define PI_OVER_4                 ( PI / 4.0 )
+#define VERY_LARGE                ( 1000000 )
+
+#define EPSILON_SAMPLING_INTERVAL ( 0.00001 )
+#define EPSILON_CUTTING_PLANE     ( 0.025 )
+#define EPSILON_ZERO_CROSSING     ( 0.7 )
+#define MIN_RAY_LENGTH            ( 0.0001 )
+
+#define SAMPLING_INTERVAL_SCALE   ( 0.5 )
+#define COLOR_SCALE               ( 0.01 * SAMPLING_INTERVAL_SCALE )
+#define JITTER_SCALE              ( 0.1 )
+
+#define ERROR_PINK float4( 1, 0.5, 1, 1 )
+#define ASSERT( x ) if ( !( x ) ) debug( ERROR_PINK )
+#define DEBUG( x ) debug( float4( x, x, x, 1 ) )
+
+#define IS_VALID_NUMBER( x ) ( isfinite( x ) && !isinf( x ) && !isnan( x ) )
+#define IS_IN_RANGE( x, min, max ) ( IS_VALID_NUMBER( x ) && x >= min && x <= max )
+
+#define EQUALS( x, y, e ) ( abs( x - y ) < e )
+
+#define LIGHT_DIRECTION         float3( normalize( float3( -1.0f, 2.0f, -2.0f ) ) )
+#define SPECULAR_INTENSITY      0.7f
+#define SPECULAR_POWER          12.0f
+#define DIFFUSE_INTENSITY       0.6f
+#define DIFFUSE_POWER           1.5f
+#define AMBIENT_INTENSITY       0.2f
+#define FROZEN_COLOR_MULTIPLIER 0.85f
+
+//
+// remember to change Config.hpp also
+//
+#define WHITE_BACKGROUND 1
+#define TILE_SIZE         ( 16 )
+#define TILE_SIZE_FLOAT   ( 16.0f )
+#define INV_TILE_SIZE     ( 1.0f / TILE_SIZE_FLOAT )
+#define TILE_NUM_ELEMENTS ( TILE_SIZE * TILE_SIZE * TILE_SIZE )
+
+
+float  ComputeSamplingInterval               ( float3 backToFront, float3 textureSpaceVoxelDimensions );
+float  ComputeWindowedLeveledValue           ( float inputValue, float windowMinValue, float windowMaxValue, float zeroOutsideWindow );
+
+int    ComputeIndex3DTo1D                    ( int3 elementCoordinates, int3 volumeDimensions );
+int    ComputeIndex3DToTiled1D               ( int3 elementCoordinates, int3 volumeDimensions );
+int4   Tex3DNearestFromBuffer                ( isamplerBUF bufferSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+int4   Tex3DNearestFromTiledBuffer           ( isamplerBUF bufferSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+float4 Tex3DLinearFromTiledBuffer            ( isamplerBUF bufferSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+float3 ComputeGradientFromTiledBuffer        ( isamplerBUF bufferSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+float3 ComputeFilteredGradientFromTiledBuffer( isamplerBUF bufferSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+
+float4 ComputeCubicBSplineWeights              ( float fractionalPosition0to1 );
+float2 ComputeCubicBSplineFilteredSampleWeights( float4 cubicBSplineWeights );
+float2 ComputeCubicBSplineFilteredSampleOffsets( float4 cubicBSplineWeights, float fractionalPosition );
+float4 Tex3DCubicBSpline                       ( sampler3D volumeSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+float3 ComputeGradient                         ( sampler3D volumeSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+float3 ComputeFilteredGradient                 ( sampler3D volumeSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume );
+
+struct RaycastVolumeVertexData
+{
+    float4 objectSpacePosition      : POSITION;
+};
+
+struct RaycastVolumeGeometryData
+{
+    float4 clipSpacePosition        : POSITION;
+    float4 screenTextureCoordinates : TEXCOORD0;
+};
+
+struct RaycastVolumeFragmentData
+{
+    float4 screenTextureCoordinates : TEXCOORD0;
+};
+
+void RaycastVolumeVertexProgram
+(
+    in      RaycastVolumeVertexData   vertexData,
+    uniform float4x4                  modelViewProjectionMatrix : WORLDVIEWPROJECTION,
+    out     RaycastVolumeGeometryData geometryData
+)
+{
+    geometryData.clipSpacePosition        = mul( modelViewProjectionMatrix, vertexData.objectSpacePosition );
+    geometryData.screenTextureCoordinates = geometryData.clipSpacePosition;
+}
+
+TRIANGLE TRIANGLE_OUT void RaycastVolumeGeometryProgram
+(
+    in AttribArray< float4 > clipSpacePosition        : POSITION,
+    in AttribArray< float4 > screenTextureCoordinates : TEXCOORD0
+)
+{
+    for ( int i = 0; i < clipSpacePosition.length; i++ )
+    {
+        emitVertex(
+            clipSpacePosition[ i ]        : POSITION,
+            screenTextureCoordinates[ i ] : TEXCOORD0 );
+    }
+}
+
+void RaycastVolumeFragmentProgram
+(
+    in      RaycastVolumeFragmentData fragmentData,
+
+    uniform sampler2D                 frontFacesSampler,
+    uniform sampler2D                 backFacesSampler,
+    uniform usampler3D                sourceVolumeSampler,
+    uniform usampler3D                activeElementsSampler,
+    uniform sampler3D                 levelSetVolumeSampler,
+    uniform sampler3D                 frozenLevelSetVolumeSampler,
+                              
+    uniform float                     cuttingPlaneZValue,
+    uniform float                     isosurface,
+    uniform float3                    textureSpaceVoxelDimensions,
+    uniform float                     debugRender,
+    uniform float                     renderLevelSet,
+    uniform float                     renderHalo,
+    uniform float                     showSourceData,
+    uniform float                     zeroOutsideWindow,
+    uniform float                     sourceWindow,
+    uniform float                     sourceLevel,
+                              
+    out     float4                    finalColor        : COLOR
+)
+{
+    //
+    // initialization
+    //
+    float  sourceWindowMinValue                = sourceLevel - sourceWindow;
+    float  sourceWindowMaxValue                = sourceLevel + sourceWindow;
+                                         
+    float3 normalizedClipSpaceCoordinates      = fragmentData.screenTextureCoordinates.xyz / fragmentData.screenTextureCoordinates.w;
+    float3 textureCoordinates                  = ( normalizedClipSpaceCoordinates + 1 ) / 2;
+                                         
+    float3 frontFaceCoordinates                = tex2D( frontFacesSampler, textureCoordinates ).xyz;
+    float3 backFaceCoordinates                 = tex2D( backFacesSampler,  textureCoordinates ).xyz;
+                                         
+    float3 backToFront                         = frontFaceCoordinates - backFaceCoordinates;
+    float  backToFrontLength                   = length( backToFront );
+    float3 backToFrontNormalized               = backToFront / backToFrontLength;
+                                         
+    float  samplingInterval                    = ComputeSamplingInterval( backToFront, textureSpaceVoxelDimensions );
+    float  numSamples                          = floor( backToFrontLength / samplingInterval );
+                                         
+    float3 positionIncrement                   = backToFrontNormalized * samplingInterval * -1;
+    float3 startingPositionInVolume            = frontFaceCoordinates + ( positionIncrement * 0.5 );
+    float3 currentPositionInVolume             = startingPositionInVolume;
+                                         
+    bool finishedSampling                      = false;
+    bool everHitCuttingPlane                   = false;
+    bool everHitLevelSetHalo                   = false;
+    bool everHitLevelSetSurface                = false;
+    bool everHitActiveElement                  = false;
+    bool setFrozenColorMultiplier              = true;
+    bool initialSample                         = true;
+                                             
+    bool renderHaloBool                        = renderHalo     != 0.0f;
+    bool renderLevelSetBool                    = renderLevelSet != 0.0f;
+    bool debugRenderBool                       = debugRender     > 0.5f;
+    bool showSourceDataBool                    = showSourceData  > 0.0f;
+                                         
+    bool whiteBackgroundBool                   = WHITE_BACKGROUND;
+                                         
+    float levelSetDiffuse                      = 0.0f;
+    float levelSetSpecular                     = 0.0f;
+    float frozenColorMultiplier                = 0.0f;
+    float integratedWindowedLeveledSourceValue = 0.0f;
+
+
+    //
+    // raycasting loop
+    //
+    for ( int i = 0; i < numSamples; i++ )
+    {
+        if ( !finishedSampling )
+        {
+            //
+            // sample textures
+            //
+            float sourceValue                = tex3D( sourceVolumeSampler,         currentPositionInVolume ).x;
+            float currentLevelSetValue       = tex3D( levelSetVolumeSampler,       currentPositionInVolume ).w;
+            float frozenLevelSetValue        = tex3D( frozenLevelSetVolumeSampler, currentPositionInVolume ).w;
+            float activeElementValue         = tex3D( activeElementsSampler,       currentPositionInVolume ).x;
+            
+            
+            //
+            // window and level the source value
+            //
+            float windowedLeveledSourceValue = ComputeWindowedLeveledValue( sourceValue, sourceWindowMinValue, sourceWindowMaxValue, zeroOutsideWindow );
+
+
+            //
+            // decide on the hit state
+            //
+            bool hitCuttingPlane           = EQUALS( currentPositionInVolume.z, cuttingPlaneZValue, EPSILON_CUTTING_PLANE );            
+            bool hitCurrentLevelSetSurface = currentLevelSetValue < isosurface;
+            bool hitFrozenLevelSetSurface  = frozenLevelSetValue  < isosurface;
+            bool hitAnyLevelSetSurface     = hitCurrentLevelSetSurface || hitFrozenLevelSetSurface;
+            bool hitCurrentLevelSetHalo    = !hitCurrentLevelSetSurface && EQUALS( currentLevelSetValue, 0.0f, EPSILON_ZERO_CROSSING );
+            bool hitFrozenLevelSetHalo     = !hitFrozenLevelSetSurface  && EQUALS( frozenLevelSetValue,  0.0f, EPSILON_ZERO_CROSSING );
+            bool hitAnyLevelSetHalo        = hitCurrentLevelSetHalo || hitFrozenLevelSetHalo;
+            bool hitActiveElement          = activeElementValue > 0.0f;            
+                        
+            //
+            // set the hit state accessable from outside the raycasting loop
+            //
+            if ( hitAnyLevelSetSurface )
+            {
+                if ( hitCurrentLevelSetSurface )
+                {
+                    frozenColorMultiplier = 1.0f;
+                }
+                else if ( hitFrozenLevelSetSurface )
+                {
+                    frozenColorMultiplier = FROZEN_COLOR_MULTIPLIER;
+                }            
+            }
+            else if ( hitAnyLevelSetHalo && renderHaloBool )
+            {            
+                if ( setFrozenColorMultiplier )
+                {
+                    if ( hitCurrentLevelSetSurface || ( hitCurrentLevelSetHalo && !hitFrozenLevelSetSurface && renderHaloBool ) )
+                    {
+                        frozenColorMultiplier = 1.0f;
+                    }
+                    else if ( hitFrozenLevelSetSurface || ( hitFrozenLevelSetHalo && renderHaloBool ) )
+                    {
+                        frozenColorMultiplier = FROZEN_COLOR_MULTIPLIER;
+                    } 
+                    
+                    setFrozenColorMultiplier = false;           
+                }
+            }
+                        
+            if ( hitCuttingPlane )
+            {
+                everHitCuttingPlane    = true;
+            }
+            if ( hitAnyLevelSetHalo )
+            {
+                everHitLevelSetHalo    = true;
+            }
+            if ( hitAnyLevelSetSurface )
+            {
+                everHitLevelSetSurface = true;
+            }
+            if ( hitActiveElement )
+            {
+                everHitActiveElement   = true;
+            }
+    
+                
+            //
+            // if we're on the cutting plane...
+            //
+            if ( hitCuttingPlane )
+            {
+                finishedSampling                     = true;
+                integratedWindowedLeveledSourceValue = integratedWindowedLeveledSourceValue + windowedLeveledSourceValue;
+            }
+            
+                        
+            //
+            // otherwise (if we're not on the cutting plane)...
+            //
+            else
+            {
+                if ( hitAnyLevelSetSurface && renderLevelSetBool )
+                {
+                    finishedSampling = true;
+
+                    float3 levelSetGradient;
+
+                    if ( hitCurrentLevelSetSurface )
+                    {
+                        levelSetGradient = ComputeFilteredGradient( levelSetVolumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume );                    
+                    }
+                    else
+                    {
+                        levelSetGradient = ComputeFilteredGradient( frozenLevelSetVolumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume );
+                    }
+
+                    float3 levelSetGradientNormalized = normalize( levelSetGradient );
+                    float3 lightReflection            = reflect( LIGHT_DIRECTION, - levelSetGradientNormalized );
+                    float NdotV                       = abs( dot( backToFrontNormalized, levelSetGradientNormalized ) );
+                    float NdotL                       = clamp( dot( backToFrontNormalized, lightReflection ), 0.0f, 1.0f );
+
+                    levelSetSpecular                  = pow( NdotL, SPECULAR_POWER ) * SPECULAR_INTENSITY;
+                    levelSetDiffuse                   = pow( NdotV, DIFFUSE_POWER )  * DIFFUSE_INTENSITY;
+                }
+            }
+            
+            integratedWindowedLeveledSourceValue = integratedWindowedLeveledSourceValue   + ( windowedLeveledSourceValue * COLOR_SCALE );
+            currentPositionInVolume              = currentPositionInVolume + positionIncrement;
+            
+            if ( !finishedSampling )
+            {
+                initialSample = false;
+            }
+        }
+    }
+                            
+
+    //
+    // based on all the state we set in the raycasting loop, set the final pixel color...
+    //
+    
+    //
+    // if we he the cutting plane from above...
+    //
+    if ( everHitCuttingPlane && initialSample )
+    {
+        if ( everHitLevelSetHalo && !everHitLevelSetSurface && renderHaloBool )
+        {
+            finalColor = float4( frozenColorMultiplier, frozenColorMultiplier, 0.0f, 1.0f );            
+        }
+        else
+        {
+            if ( everHitLevelSetSurface && renderLevelSetBool )
+            {
+                if ( everHitActiveElement && debugRenderBool )
+                {
+                    finalColor = float4( 0.0f, frozenColorMultiplier, frozenColorMultiplier, 1.0f );
+                }
+                else
+                {
+                    finalColor = float4( 0.0f, frozenColorMultiplier, 0.0f, 1.0f );
+                }
+            }
+            else
+            {
+                if ( showSourceData )
+                {
+                    if ( whiteBackgroundBool )
+                    {
+                        finalColor = float4( 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f );
+                    }
+                    else
+                    {
+                        finalColor = float4( integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, 1.0f );
+                    }
+                }
+                else
+                {
+                    if ( whiteBackgroundBool )
+                    {
+                        finalColor = float4( 1.0f, 1.0f, 1.0f, 1.0f );
+                    }
+                    else
+                    {
+                        finalColor = float4( 0.0f, 0.0f, 0.0f, 1.0f );
+                    }                
+                }
+            }
+        }
+    }
+    
+    
+    //
+    // if we hit the cutting plane from below...
+    //
+    else if ( everHitCuttingPlane && !initialSample )
+    {   
+        if ( everHitLevelSetHalo && !everHitLevelSetSurface && renderHaloBool )
+        {
+            finalColor = float4( frozenColorMultiplier, frozenColorMultiplier, 0.0f, 1.0f );
+        }
+        else
+        {
+            if ( showSourceData )
+            {
+                if ( whiteBackgroundBool )
+                {
+                    finalColor = float4( 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f );
+                }
+                else
+                {
+                    finalColor = float4( integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, 1.0f );
+                }
+            }
+            else
+            {
+                if ( whiteBackgroundBool )
+                {
+                    finalColor = float4( 1.0f, 1.0f, 1.0f, 1.0f );
+                }
+                else
+                {
+                    finalColor = float4( 0.0f, 0.0f, 0.0f, 1.0f );
+                }                
+            }                            
+        }
+    }
+    
+    
+    //
+    // if we don't hit the cutting plane...
+    //
+    else
+    {
+        if ( everHitLevelSetHalo && renderHaloBool )
+        {
+            if ( everHitLevelSetSurface && renderLevelSetBool )
+            {
+                float4 finalSpecular = float4( levelSetSpecular, levelSetSpecular, levelSetSpecular, 0.0f );
+
+                if ( everHitActiveElement && debugRenderBool )
+                {
+                    float4 finalAmbient = float4( 0.0f, AMBIENT_INTENSITY * frozenColorMultiplier, AMBIENT_INTENSITY * frozenColorMultiplier, 1.0f );
+                    float4 finalDiffuse = float4( 0.0f, levelSetDiffuse   * frozenColorMultiplier, levelSetDiffuse   * frozenColorMultiplier, 1.0f );
+                    
+                    finalColor = finalAmbient + finalDiffuse + finalSpecular;
+                }
+                else
+                {
+                    float4 finalAmbient = float4( 0.0f, AMBIENT_INTENSITY * frozenColorMultiplier, 0.0f, 1.0f );
+                    float4 finalDiffuse = float4( 0.0f, levelSetDiffuse   * frozenColorMultiplier, 0.0f, 1.0f );
+                    
+                    finalColor = finalAmbient + finalDiffuse + finalSpecular;
+                }            
+            }
+            else
+            {
+                if ( everHitLevelSetSurface )
+                {
+                    if ( showSourceData )
+                    {
+                        if ( whiteBackgroundBool )
+                        {
+                            finalColor = float4( 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f );
+                        }
+                        else
+                        {
+                            finalColor = float4( integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, 1.0f );
+                        }
+                    }
+                    else
+                    {
+                        if ( whiteBackgroundBool )
+                        {
+                            finalColor = float4( 1.0f, 1.0f, 1.0f, 1.0f );
+                        }
+                        else
+                        {
+                            finalColor = float4( 0.0f, 0.0f, 0.0f, 1.0f );
+                        }                
+                    }                    
+                }
+                else
+                {
+                    finalColor = float4( frozenColorMultiplier, frozenColorMultiplier, 0.0f, 1.0f );
+                }    
+            }
+        }
+        else
+        {
+            if ( everHitLevelSetSurface && renderLevelSetBool )
+            {
+                float4 finalSpecular = float4( levelSetSpecular, levelSetSpecular, levelSetSpecular, 0.0f );
+
+                if ( everHitActiveElement && debugRenderBool )
+                {
+                    float4 finalAmbient = float4( 0.0f, AMBIENT_INTENSITY * frozenColorMultiplier, AMBIENT_INTENSITY * frozenColorMultiplier, 1.0f );
+                    float4 finalDiffuse = float4( 0.0f, levelSetDiffuse   * frozenColorMultiplier, levelSetDiffuse   * frozenColorMultiplier, 1.0f );
+                    
+                    finalColor = finalAmbient + finalDiffuse + finalSpecular;
+                }
+                else
+                {
+                    float4 finalAmbient = float4( 0.0f, AMBIENT_INTENSITY * frozenColorMultiplier, 0.0f, 1.0f );
+                    float4 finalDiffuse = float4( 0.0f, levelSetDiffuse   * frozenColorMultiplier, 0.0f, 1.0f );
+                    
+                    finalColor = finalAmbient + finalDiffuse + finalSpecular;
+                }
+            }
+            else
+            {
+                if ( showSourceData )
+                {
+                    if ( whiteBackgroundBool )
+                    {
+                        finalColor = float4( 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f - integratedWindowedLeveledSourceValue, 1.0f );
+                    }
+                    else
+                    {
+                        finalColor = float4( integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, integratedWindowedLeveledSourceValue, 1.0f );
+                    }
+                }
+                else
+                {
+                    if ( whiteBackgroundBool )
+                    {
+                        finalColor = float4( 1.0f, 1.0f, 1.0f, 1.0f );
+                    }
+                    else
+                    {
+                        finalColor = float4( 0.0f, 0.0f, 0.0f, 1.0f );
+                    }                
+                }
+            }
+        }    
+    }
+}
+
+//
+// compute sampling interval - intersect the canonical backToFront vector with a voxel and take the length
+//
+float ComputeSamplingInterval( float3 backToFront, float3 textureSpaceVoxelDimensions )
+{
+    float3 backToFrontPositive           = abs( backToFront );
+    float3 backToFrontPositiveNormalized = normalize( backToFrontPositive );
+    backToFrontPositiveNormalized        = clamp( backToFrontPositiveNormalized, 0, 1 );
+
+    //
+    // intersect canonical backToFront ray with the XY, XZ, YZ planes of a voxel
+    //
+    float distanceToIntersectionXY;
+    float distanceToIntersectionXZ;
+    float distanceToIntersectionYZ;
+
+    if ( EQUALS( backToFrontPositiveNormalized.z, 0, EPSILON_SAMPLING_INTERVAL ) )
+    {
+        distanceToIntersectionXY = VERY_LARGE;
+    }
+    else
+    {
+        distanceToIntersectionXY = textureSpaceVoxelDimensions.z / ( backToFrontPositiveNormalized.z );
+    }
+
+    if ( EQUALS( backToFrontPositiveNormalized.y, 0, EPSILON_SAMPLING_INTERVAL ) )
+    {
+        distanceToIntersectionXZ = VERY_LARGE;
+    }
+    else
+    {
+        distanceToIntersectionXZ = textureSpaceVoxelDimensions.y / ( backToFrontPositiveNormalized.y );
+    }
+
+    if ( EQUALS( backToFrontPositiveNormalized.x, 0, EPSILON_SAMPLING_INTERVAL ) )
+    {
+        distanceToIntersectionYZ = VERY_LARGE;
+    }
+    else
+    {
+        distanceToIntersectionYZ = textureSpaceVoxelDimensions.x / ( backToFrontPositiveNormalized.x );
+    }
+
+    //
+    // take the minimum distance
+    //
+    float minDistanceToIntersection = min( distanceToIntersectionXY, distanceToIntersectionXZ );
+    minDistanceToIntersection       = min( minDistanceToIntersection, distanceToIntersectionYZ );
+
+    return ( minDistanceToIntersection ) * SAMPLING_INTERVAL_SCALE;
+}
+
+float ComputeWindowedLeveledValue( float inputValue, float windowMinValue, float windowMaxValue, float zeroOutsideWindow )
+{
+    float returnValue = 0.0f;
+    
+    if ( zeroOutsideWindow == 1.0f )
+    {
+        returnValue = ( inputValue - windowMinValue ) / ( windowMaxValue - windowMinValue );
+
+        if ( returnValue > 1.0f || returnValue < 0.0f )
+        {
+            returnValue = 0.0f;
+        }
+    }
+    else
+    {
+        returnValue = clamp( ( inputValue - windowMinValue ) / ( windowMaxValue - windowMinValue ), 0, 1 );
+    }
+
+    return returnValue;
+}
+
+//
+// compute filtered gradient
+//
+float3 ComputeFilteredGradientFromTiledBuffer( isamplerBUF bufferSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume )
+{
+    float3 d           = textureSpaceVoxelDimensions;
+
+    float3 g0NegativeZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x,  d.y, -d.z ) );
+    float3 g2NegativeZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x,  d.y, -d.z ) );
+    float3 g6NegativeZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x, -d.y, -d.z ) );
+    float3 g8NegativeZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x, -d.y, -d.z ) );
+
+    float3 g4          = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( 0, 0, 0 ) );
+
+    float3 g0PositiveZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x,  d.y,  d.z ) );
+    float3 g2PositiveZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x,  d.y,  d.z ) );
+    float3 g6PositiveZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x, -d.y,  d.z ) );
+    float3 g8PositiveZ = ComputeGradientFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x, -d.y,  d.z ) );
+
+    float3 gFiltered   = ( g0NegativeZ + g2NegativeZ + g6NegativeZ + g8NegativeZ + g4 + g0PositiveZ + g0PositiveZ + g2PositiveZ + g6PositiveZ + g8PositiveZ ) / 9;
+
+    return gFiltered;
+}
+
+//
+// compute gradient
+//
+float3 ComputeGradientFromTiledBuffer( isamplerBUF bufferSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume )
+{
+    float3 dXOffsetForward = currentPositionInVolume + float3( textureSpaceVoxelDimensions.x, 0, 0 );
+    float3 dYOffsetForward = currentPositionInVolume + float3( 0, textureSpaceVoxelDimensions.y, 0 );
+    float3 dZOffsetForward = currentPositionInVolume + float3( 0, 0, textureSpaceVoxelDimensions.z );
+
+    float3 dXOffsetBackward = currentPositionInVolume - float3( textureSpaceVoxelDimensions.x, 0, 0 );
+    float3 dYOffsetBackward = currentPositionInVolume - float3( 0, textureSpaceVoxelDimensions.y, 0 );
+    float3 dZOffsetBackward = currentPositionInVolume - float3( 0, 0, textureSpaceVoxelDimensions.z );
+
+    float dX =
+        ( Tex3DNearestFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, dXOffsetForward  ).x -
+          Tex3DNearestFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, dXOffsetBackward ).x ) / 2;
+
+    float dY =
+        ( Tex3DNearestFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, dYOffsetForward  ).x -
+          Tex3DNearestFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, dYOffsetBackward ).x ) / 2;
+
+    float dZ =
+        ( Tex3DNearestFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, dZOffsetForward  ).x -
+          Tex3DNearestFromTiledBuffer( bufferSampler, textureSpaceVoxelDimensions, dZOffsetBackward ).x ) / 2;
+
+    float3 gradient = float3( dX, dY, dZ ) / textureSpaceVoxelDimensions;
+
+    return gradient;
+}
+
+float4 Tex3DLinearFromTiledBuffer( isamplerBUF sampler, float3 textureSpaceVoxelDimensions, float3 positionInVolume )
+{
+    float3 fractionalPositionInVolume     = fmod( positionInVolume, textureSpaceVoxelDimensions );
+    float3 fractionalPositionInVolume0to1 = fractionalPositionInVolume / textureSpaceVoxelDimensions;
+
+    float3 down = - fractionalPositionInVolume;
+    float3 up   =   textureSpaceVoxelDimensions - fractionalPositionInVolume;
+
+    float3 pos_DDD = positionInVolume + float3( down.x, down.y, down.z );
+    float3 pos_DDU = positionInVolume + float3( down.x, down.y, up.z   );
+    float3 pos_DUD = positionInVolume + float3( down.x, up.y,   down.z );
+    float3 pos_DUU = positionInVolume + float3( down.x, up.y,   up.z   );
+    float3 pos_UDD = positionInVolume + float3( up.x,   down.y, down.z );
+    float3 pos_UDU = positionInVolume + float3( up.x,   down.y, up.z   );
+    float3 pos_UUD = positionInVolume + float3( up.x,   up.y,   down.z );
+    float3 pos_UUU = positionInVolume + float3( up.x,   up.y,   up.z   );
+
+    float4 sample_DDD = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_DDD );
+    float4 sample_DDU = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_DDU );
+    float4 sample_DUD = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_DUD );
+    float4 sample_DUU = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_DUU );
+    float4 sample_UDD = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_UDD );
+    float4 sample_UDU = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_UDU );
+    float4 sample_UUD = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_UUD );
+    float4 sample_UUU = Tex3DNearestFromTiledBuffer( sampler, textureSpaceVoxelDimensions, pos_UUU );
+
+    float4 sample_DDD_UDD = lerp( sample_DDD, sample_UDD, fractionalPositionInVolume0to1.x );
+    float4 sample_DUD_UUD = lerp( sample_DUD, sample_UUD, fractionalPositionInVolume0to1.x );
+    float4 sample_DDU_UDU = lerp( sample_DDU, sample_UDU, fractionalPositionInVolume0to1.x );
+    float4 sample_DUU_UUU = lerp( sample_DUU, sample_UUU, fractionalPositionInVolume0to1.x );
+
+    float4 sample_DDD_UDD_DUD_UUD = lerp( sample_DDD_UDD, sample_DUD_UUD, fractionalPositionInVolume0to1.y );
+    float4 sample_DDU_UDU_DUU_UUU = lerp( sample_DDU_UDU, sample_DUU_UUU, fractionalPositionInVolume0to1.y );
+
+    float4 result = lerp( sample_DDD_UDD_DUD_UUD, sample_DDU_UDU_DUU_UUU, fractionalPositionInVolume0to1.z );
+
+    return result;
+}
+
+int4 Tex3DNearestFromTiledBuffer( isamplerBUF sampler, float3 textureSpaceVoxelDimensions, float3 positionInVolume )
+{
+    int3 volumeDimensions             = round( 1.0f / textureSpaceVoxelDimensions );
+    int3 denormalizedPositionInVolume = floor( ( positionInVolume ) * volumeDimensions );
+
+    if ( denormalizedPositionInVolume.x < 0 )                   denormalizedPositionInVolume.x = 0;
+    if ( denormalizedPositionInVolume.y < 0 )                   denormalizedPositionInVolume.y = 0;
+    if ( denormalizedPositionInVolume.z < 0 )                   denormalizedPositionInVolume.z = 0;
+    if ( denormalizedPositionInVolume.x >= volumeDimensions.x ) denormalizedPositionInVolume.x = volumeDimensions.x - 1;
+    if ( denormalizedPositionInVolume.y >= volumeDimensions.y ) denormalizedPositionInVolume.y = volumeDimensions.y - 1;
+    if ( denormalizedPositionInVolume.z >= volumeDimensions.z ) denormalizedPositionInVolume.z = volumeDimensions.z - 1;
+
+    int  index1D = ComputeIndex3DToTiled1D( denormalizedPositionInVolume, volumeDimensions );
+
+    return texBUF( sampler, index1D );
+}
+
+int4 Tex3DNearestFromBuffer( isamplerBUF sampler, float3 textureSpaceVoxelDimensions, float3 positionInVolume )
+{
+    int3 volumeDimensions             = round( 1.0f / textureSpaceVoxelDimensions );
+    int3 denormalizedPositionInVolume = floor( ( positionInVolume ) * volumeDimensions );
+
+    if ( denormalizedPositionInVolume.x < 0 )                   denormalizedPositionInVolume.x = 0;
+    if ( denormalizedPositionInVolume.y < 0 )                   denormalizedPositionInVolume.y = 0;
+    if ( denormalizedPositionInVolume.z < 0 )                   denormalizedPositionInVolume.z = 0;
+    if ( denormalizedPositionInVolume.x >= volumeDimensions.x ) denormalizedPositionInVolume.x = volumeDimensions.x - 1;
+    if ( denormalizedPositionInVolume.y >= volumeDimensions.y ) denormalizedPositionInVolume.y = volumeDimensions.y - 1;
+    if ( denormalizedPositionInVolume.z >= volumeDimensions.z ) denormalizedPositionInVolume.z = volumeDimensions.z - 1;
+
+    int index1D = ComputeIndex3DTo1D( denormalizedPositionInVolume, volumeDimensions );
+
+    return texBUF( sampler, index1D );
+}
+
+int ComputeIndex3DToTiled1D( int3 elementCoordinates, int3 volumeDimensions )
+{
+    int3 tileCoordinates;
+
+    tileCoordinates.x = floor( elementCoordinates.x * INV_TILE_SIZE );
+    tileCoordinates.y = floor( elementCoordinates.y * INV_TILE_SIZE );
+    tileCoordinates.z = floor( elementCoordinates.z * INV_TILE_SIZE );
+
+    int3 tileVolumeDimensions;
+
+    tileVolumeDimensions.x = floor( volumeDimensions.x * INV_TILE_SIZE );
+    tileVolumeDimensions.y = floor( volumeDimensions.y * INV_TILE_SIZE );
+    tileVolumeDimensions.z = floor( volumeDimensions.z * INV_TILE_SIZE );
+
+    int tileIndex = ComputeIndex3DTo1D( tileCoordinates, tileVolumeDimensions );
+
+    int3 singleTileDimensions;
+
+    singleTileDimensions.x = TILE_SIZE;
+    singleTileDimensions.y = TILE_SIZE;
+    singleTileDimensions.z = TILE_SIZE;
+
+    int3 coordinatesWithinTile;
+
+    coordinatesWithinTile.x = elementCoordinates.x - ( tileCoordinates.x * singleTileDimensions.x );
+    coordinatesWithinTile.y = elementCoordinates.y - ( tileCoordinates.y * singleTileDimensions.y );
+    coordinatesWithinTile.z = elementCoordinates.z - ( tileCoordinates.z * singleTileDimensions.z );
+
+    int indexWithinTile = ComputeIndex3DTo1D( coordinatesWithinTile, singleTileDimensions );
+
+    return tileIndex * TILE_NUM_ELEMENTS + indexWithinTile;
+}
+
+int ComputeIndex3DTo1D( int3 elementCoordinates, int3 volumeDimensions )
+{
+    return ( elementCoordinates.z * volumeDimensions.y * volumeDimensions.x ) +
+           ( elementCoordinates.y * volumeDimensions.x ) +
+           ( elementCoordinates.x );
+}
+
+//
+// compute filtered gradient
+//
+float3 ComputeFilteredGradient( sampler3D volumeSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume )
+{
+    float3 d           = textureSpaceVoxelDimensions;
+
+    float3 g0NegativeZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x,  d.y, -d.z ) );
+    float3 g2NegativeZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x,  d.y, -d.z ) );
+    float3 g6NegativeZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x, -d.y, -d.z ) );
+    float3 g8NegativeZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x, -d.y, -d.z ) );
+
+    float3 g4          = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( 0, 0, 0 ) );
+
+    float3 g0PositiveZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x,  d.y,  d.z ) );
+    float3 g2PositiveZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x,  d.y,  d.z ) );
+    float3 g6PositiveZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3( -d.x, -d.y,  d.z ) );
+    float3 g8PositiveZ = ComputeGradient( volumeSampler, textureSpaceVoxelDimensions, currentPositionInVolume + float3(  d.x, -d.y,  d.z ) );
+
+    float3 gFiltered   = ( g0NegativeZ + g2NegativeZ + g6NegativeZ + g8NegativeZ + g4 + g0PositiveZ + g0PositiveZ + g2PositiveZ + g6PositiveZ + g8PositiveZ ) / 9;
+
+    return gFiltered;
+}
+
+//
+// compute gradient
+//
+float3 ComputeGradient( sampler3D volumeSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume )
+{
+    float3 dXOffsetForward = currentPositionInVolume + float3( textureSpaceVoxelDimensions.x, 0, 0 );
+    float3 dYOffsetForward = currentPositionInVolume + float3( 0, textureSpaceVoxelDimensions.y, 0 );
+    float3 dZOffsetForward = currentPositionInVolume + float3( 0, 0, textureSpaceVoxelDimensions.z );
+
+    float3 dXOffsetBackward = currentPositionInVolume - float3( textureSpaceVoxelDimensions.x, 0, 0 );
+    float3 dYOffsetBackward = currentPositionInVolume - float3( 0, textureSpaceVoxelDimensions.y, 0 );
+    float3 dZOffsetBackward = currentPositionInVolume - float3( 0, 0, textureSpaceVoxelDimensions.z );
+
+    float dX =
+        ( tex3D( volumeSampler, dXOffsetForward  ).w -
+          tex3D( volumeSampler, dXOffsetBackward ).w ) / 2;
+
+    float dY =
+        ( tex3D( volumeSampler, dYOffsetForward  ).w -
+          tex3D( volumeSampler, dYOffsetBackward ).w ) / 2;
+
+    float dZ =
+        ( tex3D( volumeSampler, dZOffsetForward  ).w -
+          tex3D( volumeSampler, dZOffsetBackward ).w ) / 2;
+
+    float3 gradient = float3( dX, dY, dZ ) / textureSpaceVoxelDimensions;
+
+    return gradient;
+}
+
+//
+// compute w0 through w4
+//
+float4 ComputeCubicBSplineWeights( float fractionalPosition0to1 )
+{
+    float4 weights;
+
+    float alphaCubed   = fractionalPosition0to1 * fractionalPosition0to1 * fractionalPosition0to1;
+    float alphaSquared = fractionalPosition0to1 * fractionalPosition0to1;
+    float alpha        = fractionalPosition0to1;
+
+    float4 alphaPowers   = float4( alphaCubed, alphaSquared, alpha, 1 );
+    float4 xCoefficients = float4( -1,  3, -3, 1 ) / 6;
+    float4 yCoefficients = float4(  3, -6,  0, 4 ) / 6;
+    float4 zCoefficients = float4( -3,  3,  3, 1 ) / 6;
+    float4 wCoefficients = float4(  1,  0,  0, 0 ) / 6;
+
+    weights.x = dot( alphaPowers, xCoefficients );
+    weights.y = dot( alphaPowers, yCoefficients );
+    weights.z = dot( alphaPowers, zCoefficients );
+    weights.w = dot( alphaPowers, wCoefficients );
+
+    return weights;
+}
+
+float2 ComputeCubicBSplineFilteredSampleWeights( float4 cubicBSplineWeights )
+{
+    float2 filteredWeights;
+
+    filteredWeights.x = cubicBSplineWeights.x + cubicBSplineWeights.y;
+    filteredWeights.y = cubicBSplineWeights.z + cubicBSplineWeights.w;
+
+    return filteredWeights;
+}
+
+float2 ComputeCubicBSplineFilteredSampleOffsets( float4 cubicBSplineWeights, float fractionalPosition0to1 )
+{
+    float2 offsets;
+
+    offsets.x = ( 1 - ( cubicBSplineWeights.y / ( cubicBSplineWeights.x + cubicBSplineWeights.y ) ) + fractionalPosition0to1 );
+    offsets.y = ( 1 + ( cubicBSplineWeights.w / ( cubicBSplineWeights.z + cubicBSplineWeights.w ) ) - fractionalPosition0to1 );
+
+    return offsets;
+}
+
+float4 Tex3DCubicBSpline( sampler3D volumeSampler, float3 textureSpaceVoxelDimensions, float3 currentPositionInVolume )
+{
+    float3 fractionalPositionInVolume     = fmod( currentPositionInVolume, textureSpaceVoxelDimensions );
+    float3 fractionalPositionInVolume0to1 = fractionalPositionInVolume / textureSpaceVoxelDimensions;
+
+    float4 bSplineWeightsX               = ComputeCubicBSplineWeights( fractionalPositionInVolume0to1.x );
+    float2 bSplineFilteredSampleWeightsX = ComputeCubicBSplineFilteredSampleWeights( bSplineWeightsX );
+    float2 bSplineFilteredSampleOffsetsX = ComputeCubicBSplineFilteredSampleOffsets( bSplineWeightsX, fractionalPositionInVolume0to1.x );
+
+    float4 bSplineWeightsY               = ComputeCubicBSplineWeights( fractionalPositionInVolume0to1.y );
+    float2 bSplineFilteredSampleWeightsY = ComputeCubicBSplineFilteredSampleWeights( bSplineWeightsY );
+    float2 bSplineFilteredSampleOffsetsY = ComputeCubicBSplineFilteredSampleOffsets( bSplineWeightsY, fractionalPositionInVolume0to1.y );
+
+    float4 bSplineWeightsZ               = ComputeCubicBSplineWeights( fractionalPositionInVolume0to1.z );
+    float2 bSplineFilteredSampleWeightsZ = ComputeCubicBSplineFilteredSampleWeights( bSplineWeightsZ );
+    float2 bSplineFilteredSampleOffsetsZ = ComputeCubicBSplineFilteredSampleOffsets( bSplineWeightsZ, fractionalPositionInVolume0to1.z );
+
+
+    float downX =    ( bSplineFilteredSampleOffsetsX.y * textureSpaceVoxelDimensions.x );
+    float upX   =  - ( bSplineFilteredSampleOffsetsX.x * textureSpaceVoxelDimensions.x );
+
+    float downY =    ( bSplineFilteredSampleOffsetsY.y * textureSpaceVoxelDimensions.y );
+    float upY   =  - ( bSplineFilteredSampleOffsetsY.x * textureSpaceVoxelDimensions.y );
+
+    float downZ =    ( bSplineFilteredSampleOffsetsZ.y * textureSpaceVoxelDimensions.z );
+    float upZ   =  - ( bSplineFilteredSampleOffsetsZ.x * textureSpaceVoxelDimensions.z );
+
+
+    float3 pos_DDD = currentPositionInVolume + float3( downX, downY, downZ );
+    float3 pos_DDU = currentPositionInVolume + float3( downX, downY, upZ   );
+    float3 pos_DUD = currentPositionInVolume + float3( downX, upY,   downZ );
+    float3 pos_DUU = currentPositionInVolume + float3( downX, upY,   upZ   );
+    float3 pos_UDD = currentPositionInVolume + float3( upX,   downY, downZ );
+    float3 pos_UDU = currentPositionInVolume + float3( upX,   downY, upZ   );
+    float3 pos_UUD = currentPositionInVolume + float3( upX,   upY,   downZ );
+    float3 pos_UUU = currentPositionInVolume + float3( upX,   upY,   upZ   );
+
+    float4 sample_DDD = tex3D( volumeSampler, pos_DDD );
+    float4 sample_DDU = tex3D( volumeSampler, pos_DDU );
+    float4 sample_DUD = tex3D( volumeSampler, pos_DUD );
+    float4 sample_DUU = tex3D( volumeSampler, pos_DUU );
+    float4 sample_UDD = tex3D( volumeSampler, pos_UDD );
+    float4 sample_UDU = tex3D( volumeSampler, pos_UDU );
+    float4 sample_UUD = tex3D( volumeSampler, pos_UUD );
+    float4 sample_UUU = tex3D( volumeSampler, pos_UUU );
+
+    float4 sample_DDD_UDD = lerp( sample_DDD, sample_UDD, bSplineFilteredSampleWeightsX.x );
+    float4 sample_DUD_UUD = lerp( sample_DUD, sample_UUD, bSplineFilteredSampleWeightsX.x );
+    float4 sample_DDU_UDU = lerp( sample_DDU, sample_UDU, bSplineFilteredSampleWeightsX.x );
+    float4 sample_DUU_UUU = lerp( sample_DUU, sample_UUU, bSplineFilteredSampleWeightsX.x );
+
+    float4 sample_DDD_UDD_DUD_UUD = lerp( sample_DDD_UDD, sample_DUD_UUD, bSplineFilteredSampleWeightsY.x );
+    float4 sample_DDU_UDU_DUU_UUU = lerp( sample_DDU_UDU, sample_DUU_UUU, bSplineFilteredSampleWeightsY.x );
+
+    float4 result = lerp( sample_DDD_UDD_DUD_UUD, sample_DDU_UDU_DUU_UUU, bSplineFilteredSampleWeightsZ.x );
+
+    return result;
+}

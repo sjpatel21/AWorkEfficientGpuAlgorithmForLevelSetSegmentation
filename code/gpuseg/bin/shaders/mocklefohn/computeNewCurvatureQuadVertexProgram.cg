@@ -1,0 +1,23 @@
+#include "shaders/mockLefohn/computeNewCurvatureQuadFragmentData.cg"
+
+struct computeNewCurvatureQuadVertexData
+{
+	float4 objectSpacePosition		: POSITION;
+	float2 upstairsNeighbor				: TEXCOORD0;
+	float2 downStairsNeighbor			: TEXCOORD1;
+};
+
+void computeNewCurvatureQuadVertexProgram
+(
+    in      computeNewCurvatureQuadVertexData   vertexData,
+    
+    uniform float4x4 modelProjectionMatrix : WORLDVIEWPROJECTION,
+    
+    out     computeNewCurvatureQuadFragmentData fragmentData
+)
+{
+	fragmentData.clipSpacePosition = mul( modelProjectionMatrix, vertexData.objectSpacePosition );
+	fragmentData.textureCoordinates = vertexData.objectSpacePosition.xy;
+	fragmentData.upstairsNeighbor = vertexData.upstairsNeighbor;
+	fragmentData.downstairsNeighbor = vertexData.downStairsNeighbor;
+}

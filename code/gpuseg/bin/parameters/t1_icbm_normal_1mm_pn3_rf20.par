@@ -1,0 +1,64 @@
+<!DOCTYPE Root SYSTEM '../runtime/data/ParameterManager.dtd'>
+<!-- edited with XMLSpy v2008 sp1 (http://www.altova.com) by mike (NA) -->
+<Root>
+    <ParameterManager>
+        <Systems>
+            <System name="Segmenter" >
+                <Parameters>
+                    <Parameter maxValue="300" type="ParameterType_Float" name="growLevel" minValue="0" >
+                        <ValueFloat value="138" />
+                    </Parameter>
+                    <Parameter maxValue="300" type="ParameterType_Float" name="growWindow" minValue="0" >
+                        <ValueFloat value="28" />
+                    </Parameter>
+                    <Parameter maxValue="1.0" type="ParameterType_Float" name="timeStep" minValue="-1.0" >
+                        <ValueFloat value="0.24" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="curvatureInfluence" minValue="0" >
+                        <ValueFloat value="0.16" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="updateOpenGLTexture" minValue="0" >
+                        <ValueFloat value="0" />
+                    </Parameter>
+                    <Parameter maxValue="150" type="ParameterType_Float" name="numSubSteps" minValue="0" >
+                        <ValueFloat value="10" />
+                    </Parameter>
+                    <Parameter maxValue="20000" type="ParameterType_Float" name="convergenceThreshold" minValue="0" >
+                        <ValueFloat value="0" />
+                    </Parameter>
+                </Parameters>
+            </System>
+            <System name="GPUSegRenderStrategy" >
+                <Parameters>
+                    <Parameter maxValue="1.05" type="ParameterType_Float" name="cuttingPlaneZValue" minValue="0.05" >
+                        <ValueFloat value="0.39" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="debugRender" minValue="0" >
+                        <ValueFloat value="1" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="renderLevelSet" minValue="0" >
+                        <ValueFloat value="1" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="renderHalo" minValue="0" >
+                        <ValueFloat value="0" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="showSourceData" minValue="0" >
+                        <ValueFloat value="1" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="zeroOutsideWindow" minValue="0" >
+                        <ValueFloat value="0" />
+                    </Parameter>
+                    <Parameter maxValue="1" type="ParameterType_Float" name="renderingIsosurface" minValue="0" >
+                        <ValueFloat value="0" />
+                    </Parameter>
+                    <Parameter maxValue="300" type="ParameterType_Float" name="sourceLevel" minValue="0" >
+                        <ValueFloat value="150" />
+                    </Parameter>
+                    <Parameter maxValue="300" type="ParameterType_Float" name="sourceWindow" minValue="0" >
+                        <ValueFloat value="150" />
+                    </Parameter>
+                </Parameters>
+            </System>
+        </Systems>
+    </ParameterManager>
+</Root>

@@ -1,0 +1,51 @@
+struct ObjectSpacePositionAsColorVertexData
+{
+    float4 objectSpacePosition : POSITION;
+};
+
+struct ObjectSpacePositionAsColorGeometryData
+{
+    float4 clipSpacePosition   : POSITION;
+    float3 objectSpacePosition : TEXCOORD0;
+};
+
+struct ObjectSpacePositionAsColorFragmentData
+{
+    float3 objectSpacePosition : TEXCOORD0;
+};
+
+void ObjectSpacePositionAsColorVertexProgram
+(
+    in      ObjectSpacePositionAsColorVertexData   vertexData,
+    uniform float4x4                               modelViewProjectionMatrix : WORLDVIEWPROJECTION,
+    out     ObjectSpacePositionAsColorGeometryData geometryData
+)
+{
+    geometryData.clipSpacePosition   = mul( modelViewProjectionMatrix, vertexData.objectSpacePosition );
+    geometryData.objectSpacePosition = vertexData.objectSpacePosition.xyz;
+}
+
+TRIANGLE TRIANGLE_OUT void ObjectSpacePositionAsColorGeometryProgram
+(
+    in AttribArray< float4 > clipSpacePosition   : POSITION,
+    in AttribArray< float3 > objectSpacePosition : TEXCOORD0
+)
+{
+    for ( int i = 0; i < clipSpacePosition.length; i++ )
+    {
+        emitVertex(
+            clipSpacePosition[ i ]   : POSITION,
+            objectSpacePosition[ i ] : TEXCOORD0 );
+    }
+}
+
+void ObjectSpacePositionAsColorFragmentProgram
+(
+    in      ObjectSpacePositionAsColorFragmentData fragmentData,
+    uniform float3       boundingBoxDimensions,
+    out     float4       finalColor             : COLOR
+)
+{
+    float3 scaledColor = ( fragmentData.objectSpacePosition + ( boundingBoxDimensions / 2 ) ) / boundingBoxDimensions;
+    finalColor         = float4( scaledColor, 1 );
+}

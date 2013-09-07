@@ -1,0 +1,23 @@
+#include "shaders/mockLefohn/constants.cg"
+#include "shaders/mockLefohn/computeCombinedMemoryAllocationFragmentData.cg"
+
+void computeCombinedMemoryAllocationFragmentProgram
+(
+	in computeCombinedMemoryAllocationFragmentData fragmentData,
+	
+	uniform sampler2D memoryOneAllocationSampler,
+	uniform sampler2D memoryTwoAllocationSampler,
+	
+	out float4 finalColor : COLOR
+)
+{
+	float2 texCoords = TEXCOORD_FLIP(fragmentData.textureCoordinates);
+	texCoords = texCoords * TEX_DIMS_VEC2;
+	
+	float firstAllocation  = tex2D( memoryOneAllocationSampler, texCoords ).r;
+	float secondAllocation  = tex2D( memoryTwoAllocationSampler, texCoords ).r;
+	
+	float finalCol = firstAllocation + secondAllocation;
+	
+	finalColor = float4(finalCol, finalCol, finalCol, 1.0);
+}	

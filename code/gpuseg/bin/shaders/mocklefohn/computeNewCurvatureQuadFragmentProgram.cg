@@ -1,0 +1,41 @@
+#include "shaders/mockLefohn/constants.cg"
+#include "shaders/mockLefohn/computeDerivatives.cg"
+#include "shaders/mockLefohn/computeNewCurvatureQuadFragmentData.cg"
+
+
+void computeNewCurvatureQuadFragmentProgram
+(
+	in computeNewCurvatureQuadFragmentData fragmentData,
+	
+	uniform sampler2D levelSetSampler,
+	
+	out float4 finalColorOne : COLOR0,
+	out float4 finalColorTwo : COLOR1
+)
+{	
+	float2 thisCoords = TEXCOORD_FLIP(fragmentData.textureCoordinates);
+	thisCoords = thisCoords * TEX_DIMS_VEC2;
+	
+	float2 upstairsCoords = TEXCOORD_FLIP(fragmentData.upstairsNeighbor);
+	upstairsCoords = upstairsCoords * TEX_DIMS_VEC2;
+	
+	float2 downstairsCoords = TEXCOORD_FLIP(fragmentData.downstairsNeighbor);
+	downstairsCoords = downstairsCoords * TEX_DIMS_VEC2;
+	
+	sampleStruct samples;
+	derivativeStruct derivatives;
+	
+	getQuadSamples(thisCoords, upstairsCoords,
+								 downstairsCoords, levelSetSampler,  samples);
+								 
+	computeDerivatives(samples, derivatives);
+	
+	float curvature = 0.0;
+	float gradient = 0.0;
+	
+	computeCurvature(derivatives, curvature);
+	computeGradient(derivatives, gradient);
+	
+	finalColorOne = float4(curvature, curvature, curvature, 1.0);
+	finalColorTwo = float4(gradient, gradient, gradient, 1.0);
+}

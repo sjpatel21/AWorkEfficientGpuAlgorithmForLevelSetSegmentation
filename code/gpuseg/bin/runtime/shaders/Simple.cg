@@ -1,0 +1,41 @@
+#include "Semantics.cg"
+
+struct SimpleVertexData
+{
+    float3 objectSpacePosition : POSITION;
+};
+
+struct SimpleGeometryData
+{
+    float4 clipSpacePosition : POSITION;
+};
+
+void SimpleVertexProgram
+(
+    in      SimpleVertexData   vertexData,
+    uniform float4x4           modelViewProjectionMatrix : WORLDVIEWPROJECTION,
+    out     SimpleGeometryData geometryData
+)
+{
+    geometryData.clipSpacePosition = mul( modelViewProjectionMatrix, float4( vertexData.objectSpacePosition, 1 ) );
+}
+
+TRIANGLE TRIANGLE_OUT void SimpleGeometryProgram
+(
+    in AttribArray< float4 > clipSpacePosition : POSITION
+)
+{
+    for ( int i = 0; i < clipSpacePosition.length; i++ )
+    {
+        emitVertex( clipSpacePosition[ i ] : POSITION );
+    }
+}
+
+void SimpleFragmentProgram
+(
+    uniform float4 outputColor,
+    out     float4 finalColor   : COLOR
+)
+{
+    finalColor = outputColor;
+}

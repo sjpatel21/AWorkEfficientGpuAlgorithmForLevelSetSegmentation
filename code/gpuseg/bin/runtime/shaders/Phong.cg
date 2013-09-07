@@ -1,0 +1,101 @@
+#include "Semantics.cg"
+
+struct PhongVertexData
+{
+    float3 objectSpacePosition          : POSITION;
+    float3 objectSpaceNormal            : NORMAL;
+    float2 diffuseMapTextureCoordinates : TEXCOORD_DIFFUSE_MAP;
+};
+
+struct PhongGeometryData
+{
+    float4 clipSpacePosition            : POSITION;
+    float3 objectSpaceNormal            : TEXCOORD0;
+    float2 diffuseMapTextureCoordinates : TEXCOORD1;
+    float3 objectSpacePosition          : TEXCOORD2;
+};
+
+struct PhongFragmentData
+{
+    float3 objectSpaceNormal            : TEXCOORD0;
+    float2 diffuseMapTextureCoordinates : TEXCOORD1;
+    float3 objectSpacePosition          : TEXCOORD2;
+};
+
+void PhongVertexProgram
+(
+    in      PhongVertexData   vertexData,
+    uniform float4x4          modelViewProjectionMatrix : WORLDVIEWPROJECTION,
+    out     PhongGeometryData geometryData
+)
+{
+    geometryData.clipSpacePosition            = mul( modelViewProjectionMatrix, float4( vertexData.objectSpacePosition, 1 ) );
+    geometryData.diffuseMapTextureCoordinates = vertexData.diffuseMapTextureCoordinates;
+    geometryData.objectSpacePosition          = vertexData.objectSpacePosition;
+    geometryData.objectSpaceNormal            = vertexData.objectSpaceNormal;
+}
+
+TRIANGLE TRIANGLE_OUT void PhongGeometryProgram
+(
+    AttribArray< float4 > clipSpacePosition            : POSITION,
+    AttribArray< float3 > objectSpaceNormal            : TEXCOORD0,
+    AttribArray< float2 > diffuseMapTextureCoordinates : TEXCOORD1,
+    AttribArray< float3 > objectSpacePosition          : TEXCOORD2
+)
+{
+    for ( int i = 0; i < clipSpacePosition.length; i++ )
+    {
+        emitVertex(
+            clipSpacePosition[ i ]            : POSITION,
+            objectSpaceNormal[ i ]            : TEXCOORD0,
+            diffuseMapTextureCoordinates[ i ] : TEXCOORD1,
+            objectSpacePosition[ i ]          : TEXCOORD2 );
+    }
+}
+
+void PhongFragmentProgram
+(
+    in      PhongFragmentData fragmentData,
+    
+    uniform float             useDiffuseMap,
+    uniform float3            ambientColor,
+    uniform float3            diffuseColor,
+    uniform float3            specularColor,
+    uniform float             shininess,
+    uniform float3            objectSpaceLightPosition,
+    uniform float3            objectSpaceCameraPosition,
+    uniform sampler2D         diffuseMapSampler,
+
+    out     float3            finalColor         : COLOR
+)
+{   
+    float3 objectSpaceLightVector  = objectSpaceLightPosition  - fragmentData.objectSpacePosition;
+    float3 objectSpaceViewVector   = objectSpaceCameraPosition - fragmentData.objectSpacePosition;
+    
+    objectSpaceLightVector         = normalize( objectSpaceLightVector );
+    objectSpaceViewVector          = normalize( objectSpaceViewVector );
+    fragmentData.objectSpaceNormal = normalize( fragmentData.objectSpaceNormal );
+    
+    float3 objectSpaceIdealSpecularSurfaceNormal = objectSpaceLightVector + objectSpaceViewVector;
+    objectSpaceIdealSpecularSurfaceNormal        = normalize( objectSpaceIdealSpecularSurfaceNormal );
+        
+    float3 finalAmbientColor  = ambientColor;
+
+    if ( useDiffuseMap > 0.0 )
+    {
+        diffuseColor = tex2D( diffuseMapSampler, fragmentData.diffuseMapTextureCoordinates ).xyz;
+    }
+
+    float  diffuseDotProduct  = max( 0, dot( objectSpaceLightVector, fragmentData.objectSpaceNormal ) );
+    float3 finalDiffuseColor  = diffuseColor * diffuseDotProduct;
+
+    float  specularDotProduct = max( 0, dot( objectSpaceIdealSpecularSurfaceNormal, fragmentData.objectSpaceNormal ) );
+    float3 finalSpecularColor = specularColor * pow( specularDotProduct, shininess );
+
+    if ( diffuseDotProduct == 0.0 )
+    {
+        finalSpecularColor = float3( 0, 0, 0 );
+    }
+    
+    finalColor = finalAmbientColor + finalDiffuseColor + finalSpecularColor;
+}

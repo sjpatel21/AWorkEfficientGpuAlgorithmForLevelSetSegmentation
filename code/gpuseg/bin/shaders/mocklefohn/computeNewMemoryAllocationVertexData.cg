@@ -1,0 +1,4 @@
+struct computeNewMemoryAllocationVertexData
+{
+	float4 objectSpacePosition		: POSITION;
+};

@@ -1,0 +1,31 @@
+#include "shaders/mockLefohn/computeNewCurvaturePointFragmentData.cg"
+
+struct computeNewCurvaturePointVertexData
+{
+	float4 objectSpacePosition								  : POSITION;
+	float4 upstairsDownstairsNeighbor						: TEXCOORD0;
+	float4 frontAndFrontUpstairsNeighbor				: TEXCOORD1;
+	float4 frontDownstairsAndLeftNeighbor				: TEXCOORD2;
+	float4 leftUpstairsDownstairsNeighbor				: TEXCOORD3;
+	float4 frontLeftAndFrontLeftUpstairsNeighbor					: TEXCOORD4;
+	float4 frontLeftDownstairsNeighbor											: TEXCOORD6;
+};
+
+void computeNewCurvaturePointVertexProgram
+(
+    in      computeNewCurvaturePointVertexData   vertexData,
+    
+    uniform float4x4 modelProjectionMatrix : WORLDVIEWPROJECTION,
+    
+    out     computeNewCurvaturePointFragmentData fragmentData
+)
+{
+	fragmentData.clipSpacePosition = mul( modelProjectionMatrix, vertexData.objectSpacePosition );
+	fragmentData.textureCoordinates = vertexData.objectSpacePosition.xy;
+	fragmentData.upstairsDownstairsNeighbor = vertexData.upstairsDownstairsNeighbor;
+	fragmentData.frontAndFrontUpstairsNeighbor = vertexData.frontAndFrontUpstairsNeighbor;
+	fragmentData.frontDownstairsAndLeftNeighbor = vertexData.frontDownstairsAndLeftNeighbor;
+	fragmentData.leftUpstairsDownstairsNeighbor = vertexData.leftUpstairsDownstairsNeighbor;
+	fragmentData.frontLeftAndFrontLeftUpstairsNeighbor = vertexData.frontLeftAndFrontLeftUpstairsNeighbor;
+	fragmentData.frontLeftDownstairsNeighbor = vertexData.frontLeftDownstairsNeighbor;
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <library_cameras>
+        <camera id="debugCameraShape" name="debugCameraShape">
+            <optics>
+                <technique_common>
+                    <perspective>
+                        <yfov>60</yfov>
+                        <aspect_ratio>1</aspect_ratio>
+                        <znear>1</znear>
+                        <zfar>10000</zfar>
+                    </perspective>
+                </technique_common>
+            </optics>
+        </camera>
+    </library_cameras>
+    <library_visual_scenes>
+        <visual_scene id="visualScene" name="visualScene">
+            <node id="debugCamera" name="debugCamera">
+          
+<!--                
+                <lookat>
+                  200, 200, 200
+                    0,  60,   0,
+                    0,   1,   0
+                </lookat>
+-->
+<!--            
+                <lookat>
+                  300, 300, 300
+                  -40,   -40,  -40,
+                  0,   0,   1
+                </lookat>
+-->
+
+              <lookat>
+                300, 300, 300
+                0,   0,   0,
+                0,   0,   1
+              </lookat>
+
+              <instance_camera url="#debugCameraShape"/>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#visualScene"/>
+    </scene>
+</COLLADA>

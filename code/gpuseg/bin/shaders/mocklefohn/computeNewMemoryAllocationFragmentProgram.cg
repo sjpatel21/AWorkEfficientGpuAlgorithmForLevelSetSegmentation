@@ -1,0 +1,20 @@
+#include "shaders/mockLefohn/constants.cg"
+#include "shaders/mockLefohn/computeNewMemoryAllocationFragmentData.cg"
+
+void computeNewMemoryAllocationFragmentProgram
+(
+	in computeNewMemoryAllocationFragmentData fragmentData,
+	
+	uniform sampler2D gradientSampler,
+	
+	out float4 finalColorOne : COLOR0,
+	out float4 finalColorTwo : COLOR1
+)
+{
+	float2 texCoords = TEXCOORD_FLIP(fragmentData.textureCoordinates);
+	texCoords = texCoords * TEX_DIMS_VEC2;
+	
+	float gradient  = tex2D( gradientSampler, texCoords ).r;
+	finalColorOne = float4(gradient, gradient, gradient, 1.0);
+	finalColorTwo = finalColorOne;
+}	

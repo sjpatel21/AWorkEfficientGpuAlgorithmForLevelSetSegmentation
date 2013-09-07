@@ -1,0 +1,149 @@
+%% Modified documentstyle to documentclass -- compatibility with LaTex2e
+%% N. Mancell (98/03/01).
+
+%%  ucalgthes_root.tex        (NM 98/03/01)
+%   Modified   92-09-18      Add references to dissertation        D. Teale
+%                            Add approval page to toc
+%                            Add ref to Title Degree on approval page
+%   Modified  2006-09-12     Added geometry package to set up UofC thesis margins
+%                            Removed includeprompt option N. Mancell
+%
+\documentclass{ucalgthes1}   
+\usepackage[letterpaper,top=1in, bottom=1.22in, left=1.40in, right=0.850in]{geometry}
+\usepackage{fancyhdr}
+\fancyhead{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[RO,LE]{\thepage}  
+
+
+
+%Define other usepackages here
+\usepackage[T1]{pbsi}
+\usepackage{t1enc,dfadobe}
+\usepackage{cite}
+\usepackage{framed}
+\usepackage{newalg}
+\usepackage{subfigure}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tocloft}
+\usepackage[titles]{tocloft}
+\usepackage{trivfloat}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage[numbered]{algorithm}
+\usepackage{algorithmic}
+
+\hypersetup{
+    bookmarks=true,         % show bookmarks bar?
+    unicode=false,          % non-Latin characters in Acrobat’s bookmarks
+    pdftoolbar=true,        % show Acrobat’s toolbar?
+    pdfmenubar=true,        % show Acrobat’s menu?
+    pdftitle={Level Set Volume Segmentation using Programmable Graphics Hardware},    % title
+    pdfauthor={Mike Roberts},     % author
+    pdfnewwindow=true,      % links in new window
+    pdfborder={0,0,0},
+    colorlinks=false,       % false: boxed links; true: colored links
+    linkcolor=red,          % color of internal links
+    citecolor=green,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=cyan           % color of external links
+}
+
+
+% Alter some LaTeX defaults for better treatment of figures:
+% See p.105 of "TeX Unbound" for suggested values.
+% See pp. 199-200 of Lamport's "LaTeX" book for details.
+%   General parameters, for ALL pages:
+\renewcommand{\topfraction}{0.9}    % max fraction of floats at top
+\renewcommand{\bottomfraction}{0.8} % max fraction of floats at bottom
+%   Parameters for TEXT pages (not float pages):
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}     % 2 may work better
+\setcounter{dbltopnumber}{2}    % for 2-column pages
+\renewcommand{\dbltopfraction}{0.9} % fit big float above 2-col. text
+\renewcommand{\textfraction}{0.07}  % allow minimal text w. figs
+%   Parameters for FLOAT pages (not text pages):
+\renewcommand{\floatpagefraction}{0.7}      % require fuller float pages
+    % N.B.: floatpagefraction MUST be less than topfraction !!
+\renewcommand{\dblfloatpagefraction}{0.7}   % require fuller float pages
+
+% remember to use [htp] or [htpb] for placement
+
+
+
+
+\floatstyle{boxed}
+\trivfloat{Listing}
+
+
+
+
+\renewcommand{\contentsname}{Table of Contents}
+\renewcommand{\listfigurename}{List of Figures}
+
+\renewcommand{\cfttoctitlefont}{\Large\hfill}
+\renewcommand{\cftaftertoctitle}{\hfill}
+
+\renewcommand{\cftloftitlefont}{\Large\hfill}
+\renewcommand{\cftafterloftitle}{\hfill}
+
+\setlength{\cftbeforetoctitleskip}{-0.175in}
+\setlength{\cftaftertoctitleskip}{0.3in}
+\setlength{\cftbeforeloftitleskip}{-0.145in}
+\setlength{\cftafterloftitleskip}{0.335in}
+
+
+
+\include{00-macros}
+
+
+
+\title{Level Set Volume Segmentation using Programmable Graphics Hardware}
+\author{Mike Roberts}
+\thesisyear{2011}
+\thesis{thesis}
+\newcommand{\thesistitle}{Level Set Volume Segmentation using Programmable Graphics Hardware}
+\monthname{April}
+\dept{COMPUTER SCIENCE}
+\degree{MASTER OF SCIENCE}
+
+
+
+
+
+
+\begin{document}
+
+\include{01-frontmatter}
+\include{02-abstract} 
+\include{03-acknowledgments}
+\include{04-toc}
+\include{10-introduction}
+\include{20-background}
+\include{30-temporal}
+\include{40-algorithm}
+\include{50-evaluation}
+\include{60-results}
+\include{70-conclusions}
+
+\phantomsection
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\appendix
+
+\include{80-active-set-derivation}
+\include{90-work-efficient-proof}
+\include{95-publications}
+\include{99-hpg}
+
+\end{document}
+
+

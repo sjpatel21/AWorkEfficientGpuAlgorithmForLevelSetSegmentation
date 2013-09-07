@@ -1,0 +1,54 @@
+#include "Semantics.cg"
+
+struct DebugTexCoordVertexData
+{
+    float3 objectSpacePosition          : POSITION;
+    float2 diffuseMapTextureCoordinates : TEXCOORD_DIFFUSE_MAP;
+};
+
+struct DebugTexCoordGeometryData
+{
+    float4 clipSpacePosition            : POSITION;
+    float2 diffuseMapTextureCoordinates : TEXCOORD0;
+};
+
+struct DebugTexCoordFragmentData
+{
+    float2 diffuseMapTextureCoordinates : TEXCOORD0;
+};
+
+void DebugTexCoordVertexProgram
+(
+    in      DebugTexCoordVertexData   vertexData,
+
+    uniform float4x4                  modelViewProjectionMatrix : WORLDVIEWPROJECTION,
+
+    out     DebugTexCoordGeometryData geometryData
+)
+{
+    geometryData.clipSpacePosition            = mul( modelViewProjectionMatrix, float4( vertexData.objectSpacePosition, 1 ) );
+    geometryData.diffuseMapTextureCoordinates = vertexData.diffuseMapTextureCoordinates;
+}
+
+TRIANGLE TRIANGLE_OUT void DebugTexCoordGeometryProgram
+(
+    in AttribArray< float4 > clipSpacePosition            : POSITION,
+    in AttribArray< float2 > diffuseMapTextureCoordinates : TEXCOORD0
+)
+{
+    for ( int i = 0; i < clipSpacePosition.length; i++ )
+    {
+        emitVertex(
+            clipSpacePosition[ i ]            : POSITION,
+            diffuseMapTextureCoordinates[ i ] : TEXCOORD0 );
+    }
+}
+
+void DebugTexCoordFragmentProgram
+(
+    in      DebugTexCoordFragmentData fragmentData,
+    out     float4                    finalColor    : COLOR
+)
+{
+    finalColor = float4( fragmentData.diffuseMapTextureCoordinates, 0, 1 );
+}

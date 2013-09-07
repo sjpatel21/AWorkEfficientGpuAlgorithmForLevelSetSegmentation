@@ -1,0 +1,4 @@
+struct computeNewLevelSetFieldVertexData
+{
+	float4 objectSpacePosition		: POSITION;
+};

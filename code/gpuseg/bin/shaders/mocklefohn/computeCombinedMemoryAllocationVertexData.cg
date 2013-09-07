@@ -1,0 +1,4 @@
+struct computeCombinedMemoryAllocationVertexData
+{
+	float4 objectSpacePosition		: POSITION;
+};

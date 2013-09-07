@@ -1,0 +1,24 @@
+#include "shaders/mockLefohn/constants.cg"
+#include "shaders/mockLefohn/computeNewLevelSetFieldFragmentData.cg"
+
+void computeNewLevelSetFieldFragmentProgram
+(
+	in computeNewLevelSetFieldFragmentData fragmentData,
+	
+	uniform sampler2D gradientSampler,
+	uniform sampler2D curvatureSampler,
+	uniform sampler2D oldLevelSetDataSampler,
+	uniform sampler2D medicalImagingDataSampler,
+	
+	out float4 finalColor : COLOR
+)
+{
+	float2 texCoords = TEXCOORD_FLIP(fragmentData.textureCoordinates);
+	texCoords = texCoords * TEX_DIMS_VEC2;
+	float gradient  = tex2D( gradientSampler, texCoords ).r;
+	float curvature = tex2D( curvatureSampler, texCoords ).r;
+	float oldData   = tex2D( oldLevelSetDataSampler, texCoords ).r;
+	float medical   = tex2D( medicalImagingDataSampler, texCoords ).r;
+	float finalCol = gradient + curvature + oldData + medical;
+	finalColor = float4(finalCol, finalCol, finalCol, 1.0);
+}	

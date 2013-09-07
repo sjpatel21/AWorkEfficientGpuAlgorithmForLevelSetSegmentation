@@ -1,0 +1,15 @@
+#include "shaders/mockLefohn/computeCombinedMemoryAllocationVertexData.cg"
+#include "shaders/mockLefohn/computeCombinedMemoryAllocationFragmentData.cg"
+
+void computeCombinedMemoryAllocationVertexProgram
+(
+    in      computeCombinedMemoryAllocationVertexData   vertexData,
+    
+    uniform float4x4 modelProjectionMatrix : WORLDVIEWPROJECTION,
+    
+    out     computeCombinedMemoryAllocationFragmentData fragmentData
+)
+{
+	fragmentData.clipSpacePosition = mul( modelProjectionMatrix, vertexData.objectSpacePosition );
+	fragmentData.textureCoordinates = vertexData.objectSpacePosition.xy;
+}

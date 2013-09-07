@@ -1,0 +1,40 @@
+% Updated \bf to bfseries for LaTeX2e compatibility -- N. Mancell (98/03/01)
+% THESISTITLEPAGE DOCUMENT-STYLE OPTION - released 27 January 1987
+%    for LaTeX version 2.09
+% Copyright (C) 1985 by Leslie Lamport
+% Modified D. Teale  86-11-12
+% Modified D. Teale  92-09-23  To allow the use of word dissertation or thesis
+%                              and replaced BY by by
+\def\makethesistitle{\begin{titlepage}
+ \let\footnotesize\small      % Local definitions to make \thanks produce
+ \let\footnoterule\relax      % \normalsize footnotes with no separating rule.
+\setcounter{page}{1}
+ \null
+ \begin{center}
+%\bfseries % Turned off boldfacing for title pg NM2006 and removed word THE on the next line.
+UNIVERSITY OF CALGARY \\
+\vfill
+   {\@title \par}        % Set title in size.
+   \vfill                  % Vertical space after title.
+by \\
+\vfill
+   {\@author \par }              % Set author 
+\vfill
+{A \@THESIS} \par                % Allow the word dissertation to be used here
+SUBMITTED TO THE FACULTY OF GRADUATE STUDIES \par
+IN PARTIAL FULFILLMENT OF THE REQUIREMENTS FOR THE \par
+{DEGREE OF \@degree}
+\vfill
+{DEPARTMENT OF \@dept \par}
+\vfill
+{CALGARY, ALBERTA \par}
+{{\@monthname}, {\@year} \par}
+\vfill
+{\copyright\ {\@author}~~{\@year} \par}
+\end{center} \par
+\null
+\end{titlepage}
+\setcounter{footnote}{0}       % Footnotes start at zero again.
+\let\thanks\relax
+\gdef\@thanks{}\gdef\@author{}\gdef\@title{}\let\maketitle\relax}    
+

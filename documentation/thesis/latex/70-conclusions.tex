@@ -1,0 +1,24 @@
+\fancyhead[RO,LE]{\thepage}
+\fancyfoot{} 
+\chapter{Conclusions}
+\label{chapter:conclusions}
+
+\section{Summary}
+
+I have presented a new GPU level set segmentation algorithm with immediate applications in computer vision and medical imaging. My algorithm is the first and only GPU level set segmentation algorithm to be presented in the literature with linear work-complexity and logarithmic step-complexity. Moreover my algorithm makes use of a novel condition on the temporal derivatives of the level set field to limit the active computational domain to the minimal set of changing grid elements. These innovations improve computational efficiency without affecting segmentation accuracy and create new possibilities for clinical application where speed and interactivity are critical.
+
+\section{Future Work}
+
+The results in this thesis lead to many interesting open research questions. Since Jeong et al.\ developed their GPU narrow band algorithm concurrently to the work in this thesis, I do not empirically compare the performance of my algorithm against theirs. I only offer a theoretical argument for why my algorithm is more efficient. It would be interesting to investigate the performance of both algorithms in a controlled fashion to discover how the theoretical step-complexity of each algorithm translates into practical performance.
+
+The parallel algorithm presented in this thesis is clearly limited by the amount of memory it requires. An interesting avenue for future research would be to investigate how maintain and traverse a sparse representation of the level set field in parallel. In this sense, the level set solver I propose would be sparse in both the computational and storage domains. There has been some interesting recent work on efficiently maintaining such a sparse representation sequentially on the CPU~\cite{Houston-2006,Nielsen-2006,Nielsen-2007}, however this work explicitly states that efficient access to the level set field is guaranteed only when it is accessed sequentially.
+
+Another interesting avenue for future research would be to extend the optimizations presented in this thesis to speed functions that look at larger local neighborhoods. The memory requirements of the algorithm presented in this thesis scale linearly with the number of neighbors examined by each thread in the level set solver. Depending on the number of neighbors examined by the speed
+function, different strategies for maintaining the active domain and maximizing cache locality may offer superior performance over the algorithm described in this thesis.
+
+Investigating how a user could intuitively paint on the medical data to communicate intent and domain expertise to the level set solver in real time is another interesting avenue for future research.
+
+Finally it would be interesting to extend the optimized level set algorithm described in this thesis beyond the field of medical imaging into the many problem domains already leveraging level set formulations, such as surface reconstruction and fluid simulation.  
+
+% In future we plan to perform a detailed bottleneck analysis to learn more about the relationships between computation and communication inherent in our algorithm and the GPU narrow band algorithm. We also plan to investigate strategies for further improving the cache coherence of our sparse active computational domain. Finally we plan to investigate how our algorithm can be extended to higher-order space and time discretization schemes involving bigger local neighborhoods.
+

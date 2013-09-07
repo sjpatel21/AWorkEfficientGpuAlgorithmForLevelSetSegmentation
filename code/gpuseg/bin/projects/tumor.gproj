@@ -1,0 +1,3 @@
+<Root>
+    <GPUSegProject isSigned="0" numBytesPerVoxel="0" upDirectionX="0" parametersFile="parameters/tumor.par" upDirectionY="-1" upDirectionZ="0" numVoxelsX="0" dataFile="data/tumor" numVoxelsY="0" zAnisotropy="1" numVoxelsZ="0" />
+</Root>

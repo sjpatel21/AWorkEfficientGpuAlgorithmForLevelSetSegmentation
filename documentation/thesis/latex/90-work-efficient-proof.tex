@@ -1,0 +1,17 @@
+\phantomsection
+\fancyhead[RO,LE]{\thepage}
+\fancyfoot{} 
+\chapter{Proof That My Algorithm is Work-Efficient and Step-Efficient}
+\label{app:proof}
+
+I prove that my parallel algorithm is both work-efficient and step-efficient by considering each of its subroutines individually. I define $n$ as the size of the active computational domain and $p$ as the size of the entire level set field.
+Listing~\ref{pseudo:1} requires one pass over the entire computational domain and therefore has $O(p)$ work-complexity and $O(1)$ step-complexity.
+
+The \textbf{for all} loop in Listing~\ref{pseudo:2} requires one pass over the entire computational domain and therefore has $O(p)$ work-complexity and $O(1)$ step-complexity. The call to \textbf{compact} in Listing~\ref{pseudo:2} has $O(p)$ work-complexity and $O({\log}_2 p)$ step-complexity~\cite{Harris-2007,Sengupta-2007,Sengupta-2011}.
+
+Listing~\ref{pseudo:3} and Listing~\ref{pseudo:4} each require one pass over the active computational domain and therefore each has $O(n)$ work-complexity and $O(1)$ step-complexity.
+
+Listing~\ref{pseudo:5} requires seven passes over the active computational domain, not including the call to \textbf{compact}, and therefore has $O(n)$ work-complexity and $O(1)$ step-complexity. The call to \textbf{compact} in Listing~\ref{pseudo:5} has $O(n)$ work-complexity and $O({\log}_2 n)$ step-complexity~\cite{Harris-2007,Sengupta-2007,Sengupta-2011}. After Listing~\ref{pseudo:5}, my algorithm must clear $B^{\mathbf{e}}_{0 \ldots n}$ for all offset vectors $\mathbf{e} \in E$. Clearing these buffers has $O(n)$ work-complexity and $O(1)$ step-complexity.
+
+I conclude that my algorithm has $O(p)$ work-complexity and $O({\log}_2 p)$ step-complexity during initialization. After initialization my algorithm has $O(n)$ work-complexity and $O({\log}_2 n)$ step-complexity. \qed
+
