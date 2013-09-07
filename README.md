@@ -17,7 +17,7 @@ This repository contains a C++/CUDA implementation of our paper A Work-Efficient
 
 * Windows XP/Vista/7/8
 * Visual Studio 2008
-* NVIDIA GPU that supports CUDA
+* An NVIDIA GPU that supports CUDA
 * CUDA drivers
 
 ### Precompiled Binaries
