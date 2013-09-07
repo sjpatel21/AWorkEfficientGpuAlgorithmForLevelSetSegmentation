@@ -1,10 +1,11 @@
-<a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/Brainweb-3D-Composite-1-6.png)</a>
-
 <p align="center">
   <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>A Work-Efficient GPU Algorithm for Level Set Segmentation</a><br>
   Mike Roberts, Jeff Packer, Mario Costa Sousa, Joseph Ross Mitchell<br>
   High Performance Graphics 2010
 </p>
+
+<a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/Brainweb-3D-Composite-1-6.png)</a>
+
 <p align="center">
   <b>The source code and precompiled binaries available here are provided for non-commercial research purposes only.</b>
 </p>
