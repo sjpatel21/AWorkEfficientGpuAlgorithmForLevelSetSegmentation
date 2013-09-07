@@ -1,3 +1,5 @@
+### A Work-Efficient GPU Algorithm For Level Set Segmentation
+
 C++/CUDA system implementing the paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
 
 ### Disclaimer
