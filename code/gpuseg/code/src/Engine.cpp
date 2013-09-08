@@ -41,7 +41,7 @@
 
 #ifdef LEFOHN_NO_DEBUG_BENCHMARK
 
-// Hack to get rid of the TILE_SIZE defined in Config.hpp since mock lefohn
+// Hack to get rid of the TILE_SIZE defined in Config.hpp since lefohn
 // uses it's on TILE_SIZE static const.
 const int __MangledTileSize = TILE_SIZE;
 
@@ -49,7 +49,7 @@ const int __MangledTileSize = TILE_SIZE;
 #undef TILE_SIZE
 #endif
 
-#include "lefohn/lefohnSegmentationSimulator.hpp"
+#include "lefohn/LefohnSegmentationSimulator.hpp"
 
 #define TILE_SIZE ( __MangledTileSize )
 #endif
