@@ -6,13 +6,7 @@
 
 <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/Brainweb-3D-Composite-1-6.png)</a>
 
-<p align="center">
-  <b>The source code and precompiled binaries available here are provided for non-commercial research purposes only.</b>
-</p>
-
-### Introduction
-
-This repository contains a C++/CUDA implementation of our paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
+This repository contains a C++/CUDA implementation of our paper A Work-Efficient GPU Algorithm for Level Set Segmentation. The source code and precompiled binaries available here are provided for non-commercial research purposes only.
 
 ### Requirements 
 
