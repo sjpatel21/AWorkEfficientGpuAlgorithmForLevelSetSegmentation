@@ -6,7 +6,11 @@
 
 <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/Brainweb-3D-Composite-1-6.png)</a>
 
-This repository contains a C++/CUDA implementation of our paper A Work-Efficient GPU Algorithm for Level Set Segmentation. The source code and precompiled binaries available here are provided for non-commercial research purposes only.
+This repository contains a C++/CUDA implementation of our paper A Work-Efficient GPU Algorithm for Level Set Segmentation.
+
+### Disclaimer
+
+The source code and precompiled binaries available here are provided for non-commercial research purposes only.
 
 ### Requirements 
 
@@ -17,11 +21,11 @@ This repository contains a C++/CUDA implementation of our paper A Work-Efficient
 
 ### Precompiled Binaries
 
-Precompiled binaries are available <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/data/hpg_2010_binaries.zip'>here</a>. Note that if you don't have Visual Studio 2008 installed, then you'll need to install the <a href='http://www.microsoft.com/en-us/download/details.aspx?id=29'>Visual C++ Redistributable Package (x86)</a>.
+Precompiled binaries are available <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/bin.zip'>here</a>. Note that if you don't have Visual Studio 2008 installed, then you'll need to install the <a href='http://www.microsoft.com/en-us/download/details.aspx?id=29'>Visual C++ Redistributable Package (x86)</a>.
 
 ### Build Instructions
 
-* Download the <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/data/hpg_2010_sdk.zip'>SDK zip file</a>.
+* Download the <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/sdk.zip'>SDK zip file</a>.
 * Unzip the SDK zip file into the code folder.  
 * Open code\gpuseg\build\gpuseg.sln in Visual Studio 2008.
 * Set the gpuseg project to be the startup project.
