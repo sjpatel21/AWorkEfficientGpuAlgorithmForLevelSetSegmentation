@@ -6,27 +6,27 @@
 
 <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>![Alt text](/documentation/results/Brainweb-3D-Composite-1-6.png)</a>
 
+<p align="center">
+  <b>The source code and precompiled binaries available here are provided for non-commercial research purposes only.<b><br><br>
+</p>
+
 This repository contains a C++/CUDA implementation of our paper <a href='http://graphics.stanford.edu/~mlrobert/publications/hpg_2010/'>A Work-Efficient GPU Algorithm for Level Set Segmentation</a>.
 
-### Disclaimer
-
-The source code and precompiled binaries available here are provided for non-commercial research purposes only.
-
-### Requirements 
+### Requirements
 
 * Windows XP/Vista/7/8
-* Visual Studio 2008
-* An NVIDIA GPU that supports CUDA
-* CUDA drivers
+* <a href='http://www.microsoft.com/en-us/download/details.aspx?id=7873'>Visual Studio 2008</a>
+* <a href='https://developer.nvidia.com/cuda-gpus'>CUDA-Enabled GPU</a>
+* <a href='https://developer.nvidia.com/cuda-downloads'>CUDA drivers</a>
+* <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/sdk.zip'>SDK zip file</a>
 
 ### Precompiled Binaries
 
-Precompiled binaries are available <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/bin.zip'>here</a>. Note that if you don't have Visual Studio 2008 installed, then you'll need to install the <a href='http://www.microsoft.com/en-us/download/details.aspx?id=29'>Visual C++ Redistributable Package (x86)</a>.
+Precompiled binaries are available <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/bin.zip'>here</a>. If you intend to run the precompiled binaries and you don't have Visual Studio 2008 installed, you'll need or the <a href='http://www.microsoft.com/en-us/download/details.aspx?id=29'>Visual Studio 2008 Visual C++ Redistributable Package (x86)</a>.
 
 ### Build Instructions
 
-* Download the <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/sdk.zip'>SDK zip file</a>.
-* Unzip the SDK zip file into the code folder.  
+* Unzip the SDK zip file into the code folder such that the sdk folder is parallel to the gpuseg folder.
 * Open code\gpuseg\build\gpuseg.sln in Visual Studio 2008.
 * Set the gpuseg project to be the startup project.
 * Set the gpuseg project's working directory to be the full path of the code\gpuseg\bin folder.
