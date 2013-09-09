@@ -15,7 +15,7 @@ This repository contains a C++/CUDA implementation of our paper <a href='http://
 ### Requirements
 
 * Windows XP/Vista/7/8
-* <a href='http://www.microsoft.com/en-us/download/details.aspx?id=7873'>Visual Studio 2008</a>
+* Visual Studio 2008
 * <a href='https://developer.nvidia.com/cuda-gpus'>CUDA-Enabled GPU</a>
 * <a href='https://developer.nvidia.com/cuda-downloads'>CUDA drivers</a>
 * <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/sdk.zip'>SDK zip file</a>
