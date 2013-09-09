@@ -22,7 +22,7 @@ This repository contains a C++/CUDA implementation of our paper <a href='http://
 
 ### Precompiled Binaries
 
-Precompiled binaries are available <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/bin.zip'>here</a>. If you intend to run the precompiled binaries and you don't have Visual Studio 2008 installed, you'll need or the <a href='http://www.microsoft.com/en-us/download/details.aspx?id=29'>Visual Studio 2008 Visual C++ Redistributable Package (x86)</a>.
+Precompiled binaries are available <a href='http://graphics.stanford.edu/~mlrobert/github/AWorkEfficientGpuAlgorithmForLevelSetSegmentation/bin.zip'>here</a>. If you intend to run the precompiled binaries and you don't have Visual Studio 2008 installed, you'll need the <a href='http://www.microsoft.com/en-us/download/details.aspx?id=29'>Visual Studio 2008 Visual C++ Redistributable Package (x86)</a>.
 
 ### Build Instructions
 
